@@ -1,0 +1,22 @@
+{
+    "name": "pinion",
+    "version": "1.0.0",
+    "private": true,
+    "workspaces": [
+        "packages/3d-site",
+        "packages/inner-site",
+        "packages/api"
+    ],
+    "scripts": {
+        "dev:3d": "npm run dev --workspace=packages/3d-site",
+        "dev:inner": "npm run start --workspace=packages/inner-site",
+        "dev:api": "npm run dev --workspace=packages/api",
+        "build:3d": "npm run build --workspace=packages/3d-site",
+        "build:inner": "npm run build --workspace=packages/inner-site",
+        "build": "npm run build:inner && npm run build:3d",
+        "start": "npm run start --workspace=packages/3d-site"
+    },
+    "devDependencies": {
+        "playwright": "^1.58.2"
+    }
+}

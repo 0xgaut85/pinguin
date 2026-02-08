@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+packages/3d-site/public/
+packages/inner-site/build/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Scraping artifacts
+scrape-output/
+
+# Misc
+*.tgz

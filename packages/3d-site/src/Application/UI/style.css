@@ -1,0 +1,169 @@
+/* ===== UI OVERLAY STYLES (Shift5-inspired) ===== */
+
+h1, h2, h3, h4, h5, p {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-style: normal;
+    color: var(--color-white);
+    font-size: 16px;
+}
+
+@media only screen and (max-width: 768px) {
+    h1, h2, h3, h4, h5, p {
+        font-size: 12px;
+    }
+}
+
+br {
+    padding-top: 8px;
+    padding-bottom: 8px;
+    height: 16px;
+}
+
+/* ===== Loading animations ===== */
+.loading::after {
+    display: inline-block;
+    animation: dotty steps(1, end) 1s infinite;
+    content: '';
+}
+
+@keyframes dotty {
+    0%   { content: '   '; }
+    25%  { content: '.  '; }
+    50%  { content: '.. '; }
+    75%  { content: '...'; }
+    100% { content: '   '; }
+}
+
+/* ===== Blinking cursor ===== */
+.blinking-cursor {
+    background-color: var(--color-white);
+    width: 0.8em;
+    height: 0.15em;
+    animation: blink 0.65s step-end infinite;
+}
+
+@keyframes blink {
+    from, to { background-color: transparent; }
+    50% { background-color: var(--color-white); }
+}
+
+/* ===== Loading screen ===== */
+.loading-screen-header {
+    padding: 48px;
+}
+
+.loading-screen-body {
+    padding-left: 48px;
+    padding-right: 48px;
+}
+
+.loading-screen-footer {
+    padding: 48px;
+    padding-bottom: 64px;
+}
+
+/* ===== Info overlay positioning ===== */
+.info-wrapper {
+    top: 64px;
+    left: 64px;
+}
+
+@media only screen and (max-width: 768px) {
+    .loading-screen-header {
+        padding: 16px;
+    }
+
+    .info-wrapper {
+        top: 16px;
+        left: 16px;
+    }
+
+    .blinking-cursor {
+        width: 0.4em;
+        height: 0.08em;
+    }
+
+    .loading-screen-body {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .loading-screen-footer {
+        padding: 16px;
+        padding-bottom: 32px;
+    }
+}
+
+/* ===== Progress bar animation ===== */
+@keyframes progressPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* ===== Reticle spin ===== */
+@keyframes reticleSpin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+/* ===== Navbar item link (used in menu panel) ===== */
+.navbar-link {
+    font-family: var(--font-display);
+    font-size: 48px;
+    font-weight: 400;
+    color: var(--color-dark);
+    text-decoration: none;
+    display: block;
+    padding: 4px 0;
+    transition: opacity 0.2s ease;
+    cursor: pointer;
+}
+
+.navbar-link:hover {
+    opacity: 0.6;
+}
+
+@media only screen and (max-width: 768px) {
+    .navbar-link {
+        font-size: 32px;
+    }
+}
+
+/* ===== Footer nav item hover ===== */
+.footer-nav-link:hover {
+    opacity: 0.7;
+}
+
+/* ===== Legal modal scrollbar ===== */
+.legal-modal-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.legal-modal-content::-webkit-scrollbar-track {
+    background: #202020;
+}
+
+.legal-modal-content::-webkit-scrollbar-thumb {
+    background: #4D4D4D;
+    border-radius: 3px;
+}
+
+.legal-modal-content::-webkit-scrollbar-thumb:hover {
+    background: #8B8B8B;
+}
+
+/* ===== Subscribe input placeholder ===== */
+input::placeholder {
+    color: rgba(32, 32, 32, 0.5);
+    font-family: var(--font-display);
+}
+
+/* ===== Burger hover line shifts (CSS fallback) ===== */
+.burger-button:hover .burger-line-1 {
+    transform: translateX(4px);
+}
+
+.burger-button:hover .burger-line-2 {
+    transform: translateX(-4px);
+}

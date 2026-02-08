@@ -1,0 +1,108 @@
+/* ===== DESIGN TOKENS (Shift5-inspired) ===== */
+:root {
+    --color-accent: #FF5841;
+    --color-dark: #202020;
+    --color-light-gray: #B9B9B9;
+    --color-mid-gray: #8B8B8B;
+    --color-dark-gray: #4D4D4D;
+    --color-off-white: #F8F4EB;
+    --color-white: #FFFFFF;
+    --color-black: #000000;
+
+    --font-display: 'Inter', sans-serif;
+    --font-mono: 'Space Mono', monospace;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body {
+    overflow: hidden;
+    font-family: var(--font-display);
+    color: var(--color-white);
+}
+
+.webgl {
+    position: fixed;
+    top: 0;
+    left: 0;
+    outline: none;
+}
+
+.jitter {
+    animation-duration: 0.3s;
+    animation-timing-function: ease-in-out;
+    animation-fill-mode: forwards;
+    animation-iteration-count: infinite;
+    animation-name: jittery;
+    z-index: -10;
+}
+
+.interface-wrapper {
+    width: 100%;
+    top: 64px;
+    left: 64px;
+}
+
+.icon-control-container {
+    height: 26.5px;
+    width: 26.5px;
+}
+
+@media only screen and (max-width: 768px) {
+    .interface-wrapper {
+        width: 100%;
+        top: 24px;
+        left: 24px;
+    }
+
+    .icon-control-container {
+        height: 19.5px;
+        width: 19.5px;
+    }
+}
+
+@keyframes jittery {
+    10% {
+        transform: translate(-0.1px, -0.15px) scale(1, 1);
+    }
+
+    20% {
+        transform: translate(0.15px, 0.1px) scale(1, 1);
+    }
+
+    30% {
+        transform: translate(-0.2px, -0.25px) scale(1, 1);
+    }
+
+    40% {
+        transform: translate(0.05px, 0.1px) scale(1, 1);
+    }
+
+    50% {
+        transform: translate(-0.025px, -0.05px) scale(1, 1);
+    }
+
+    60% {
+        transform: translate(0px, 0.075px) scale(1, 1);
+    }
+
+    70% {
+        transform: translate(-0.075px, -0.1px) scale(1, 1);
+    }
+
+    80% {
+        transform: translate(0.075px, 0.125px) scale(1, 1);
+    }
+
+    90% {
+        transform: translate(-0.125px, -0.075px) scale(1, 1);
+    }
+
+    100% {
+        transform: translate(0.075px, 0.025px) scale(1, 1);
+    }
+}

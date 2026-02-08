@@ -14,7 +14,13 @@
         "build:3d": "npm run build --workspace=packages/3d-site",
         "build:inner": "npm run build --workspace=packages/inner-site",
         "build": "npm run build:inner && npm run build:3d",
-        "start": "npm run start --workspace=packages/3d-site"
+        "start": "node server.js"
+    },
+    "dependencies": {
+        "@anthropic-ai/sdk": "^0.39.0",
+        "cors": "^2.8.5",
+        "dotenv": "^16.4.7",
+        "express": "^4.21.2"
     },
     "devDependencies": {
         "playwright": "^1.58.2"

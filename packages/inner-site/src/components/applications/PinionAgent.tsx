@@ -8,8 +8,10 @@ interface ChatMessage {
     content: string;
 }
 
+// In production, API is on same origin at /api. In dev, use localhost:3001
 const API_URL =
-    process.env.REACT_APP_API_URL || 'http://localhost:3001';
+    process.env.REACT_APP_API_URL ||
+    (window.location.hostname === 'localhost' ? 'http://localhost:3001' : '');
 
 const PinionAgent: React.FC<PinionAgentProps> = (props) => {
     const [messages, setMessages] = useState<ChatMessage[]>([

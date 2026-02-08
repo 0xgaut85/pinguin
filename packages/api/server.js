@@ -1,34 +1,9 @@
 require('dotenv').config();
 
 const express = require('express');
-const cors = require('cors');
 const Anthropic = require('@anthropic-ai/sdk');
 
-const app = express();
-const PORT = process.env.PORT || 3001;
-
-const allowedOrigins = [
-    'http://localhost:3000',
-    'http://localhost:8080',
-];
-
-if (process.env.CORS_ORIGIN) {
-    process.env.CORS_ORIGIN.split(',').forEach(o => allowedOrigins.push(o.trim()));
-}
-
-app.use(cors({
-    origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin) || /^\d+\.\d+\.\d+\.\d+/.test(origin)) {
-            callback(null, true);
-        } else {
-            callback(null, false);
-        }
-    },
-    methods: ['POST'],
-    credentials: true,
-}));
-
-app.use(express.json());
+const router = express.Router();
 
 const client = new Anthropic.default({
     apiKey: process.env.ANTHROPIC_API_KEY,
@@ -111,7 +86,7 @@ erc-8004 is a proposed ethereum standard for on-chain agent identity and verifia
 - never use em-dashes
 - never use oxford commas`;
 
-app.post('/api/chat', async (req, res) => {
+router.post('/chat', async (req, res) => {
     try {
         const { messages } = req.body;
 
@@ -141,6 +116,28 @@ app.post('/api/chat', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`pinion api server running on port ${PORT}`);
-});
+// Export router for unified server, but also allow standalone usage
+module.exports = router;
+
+// If run directly (standalone mode for local dev)
+if (require.main === module) {
+    const cors = require('cors');
+    const app = express();
+
+    app.use(cors({
+        origin: [
+            'http://localhost:3000',
+            'http://localhost:8080',
+        ],
+        methods: ['POST'],
+        credentials: true,
+    }));
+
+    app.use(express.json());
+    app.use('/api', router);
+
+    const PORT = process.env.PORT || 3001;
+    app.listen(PORT, () => {
+        console.log(`pinion api server running on port ${PORT}`);
+    });
+}

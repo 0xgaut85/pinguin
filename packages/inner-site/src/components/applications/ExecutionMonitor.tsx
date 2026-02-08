@@ -66,7 +66,7 @@ const ExecutionMonitor: React.FC<ExecutionMonitorProps> = (props) => {
     const [totalValue, setTotalValue] = useState(47.892);
     const [activeAgents, setActiveAgents] = useState(23);
     const [tps, setTps] = useState(3.2);
-    const [uptime, setUptime] = useState(99.97);
+    const [uptime] = useState(99.97);
     const feedRef = useRef<HTMLDivElement>(null);
 
     // Initialize with some transactions

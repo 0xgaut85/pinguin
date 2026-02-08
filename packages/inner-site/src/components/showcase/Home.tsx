@@ -7,10 +7,6 @@ export interface HomeProps {}
 const Home: React.FC<HomeProps> = (props) => {
     const navigate = useNavigate();
 
-    const goToDevelopers = () => {
-        navigate('/developers');
-    };
-
     return (
         <div style={styles.page}>
             <div style={styles.header}>

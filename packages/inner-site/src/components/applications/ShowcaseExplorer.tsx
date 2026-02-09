@@ -30,7 +30,7 @@ const ShowcaseExplorer: React.FC<ShowcaseExplorerProps> = (props) => {
             minimizeWindow={props.onMinimize}
             bottomLeftText={'© 2026 Pinion'}
         >
-            <Router>
+            <Router basename={process.env.PUBLIC_URL || '/'}>
                 <div className="site-page">
                     <VerticalNavbar />
                     <Routes>

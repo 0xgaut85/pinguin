@@ -162,16 +162,8 @@ X-Payment-Payer: 0xPAYER...       // Payer identity`}
                         <p>Primary settlement layer. Low fees, fast finality.</p>
                     </div>
                     <div style={styles.networkCard}>
-                        <h3>Ethereum</h3>
-                        <p>High-value settlements and identity anchoring.</p>
-                    </div>
-                    <div style={styles.networkCard}>
-                        <h3>Solana</h3>
+                        <h3>Solana <span style={{ opacity: 0.5, fontSize: '0.8em' }}>(coming soon)</span></h3>
                         <p>High-throughput micro-payment settlement.</p>
-                    </div>
-                    <div style={styles.networkCard}>
-                        <h3>Arbitrum</h3>
-                        <p>L2 settlement for cost-sensitive operations.</p>
                     </div>
                 </div>
             </div>

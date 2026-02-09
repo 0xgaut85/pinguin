@@ -17,7 +17,7 @@ const CAPABILITIES = [
     'content-generation', 'knowledge-graph', 'embedding',
 ];
 
-const NETWORKS = ['Base', 'Ethereum', 'Arbitrum', 'Solana'];
+const NETWORKS = ['Base', 'Solana'];
 
 function randomFrom<T>(arr: T[]): T {
     return arr[Math.floor(Math.random() * arr.length)];

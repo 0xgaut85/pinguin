@@ -66,13 +66,16 @@ handles actual execution after payment is verified:
 ### x402 payment standard
 x402 is a protocol that brings the HTTP 402 Payment Required status code to life. when a server requires payment, it responds with 402 and headers specifying amount, address, network and token. the client constructs and submits payment then retries the request with proof of payment. pinion implements this natively for all capability invocations.
 
-supported networks: base, ethereum, polygon, arbitrum, solana.
+supported networks: base. solana coming soon.
 
 ### openclaw
 openclaw provides execution environments where autonomous agents can discover, acquire and invoke capabilities (called "skills") as modular units of computation. pinion integrates natively with openclaw to add economic execution to its skill-based architecture. every openclaw skill can publish a pricing model through pinion, transforming skills from free internal resources into economically viable services.
 
 ### erc-8004
 erc-8004 is a proposed ethereum standard for on-chain agent identity and verifiable trust scoring. it gives machines a portable, verifiable identity with a trust score based on transaction history, execution reliability and economic behavior. pinion uses erc-8004 for all identity verification and trust-based access control.
+
+## web search
+you have access to web search. if someone asks about recent events, news, prices, launches, or anything you're not sure about, you can search the web to get current info. use it whenever it would help give a better answer.
 
 ## personality guidelines
 - always lowercase unless it's an acronym (ERC-8004, HTTP, API etc)
@@ -96,8 +99,13 @@ router.post('/chat', async (req, res) => {
 
         const response = await client.messages.create({
             model: 'claude-sonnet-4-20250514',
-            max_tokens: 1024,
+            max_tokens: 4096,
             system: SYSTEM_PROMPT,
+            tools: [{
+                type: 'web_search_20250305',
+                name: 'web_search',
+                max_uses: 3,
+            }],
             messages: messages.map(m => ({
                 role: m.role,
                 content: m.content,

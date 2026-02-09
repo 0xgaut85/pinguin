@@ -16,19 +16,10 @@ interface FooterNavItem {
 const FOOTER_NAV: FooterNavItem[] = [
     { label: 'Platform', href: '#' },
     {
-        label: 'Protocol',
-        isHeader: true,
-        children: [
-            { label: 'Staking', href: '#' },
-            { label: 'Governance', href: '#' },
-            { label: 'Tokenomics', href: '#' },
-        ],
-    },
-    {
         label: 'Community',
         isHeader: true,
         children: [
-            { label: 'Discord', href: '#' },
+            { label: 'Community', href: '#' },
             { label: 'Twitter/X', href: 'https://x.com/PinionOS' },
             { label: 'GitHub', href: '#' },
         ],
@@ -240,7 +231,7 @@ function renderNavColumns(
     onOpenModal?: (modal: 'privacy' | 'terms') => void,
     onClose?: () => void
 ) {
-    // Group: column 1 = Platform, column 2 = Protocol + subs, column 3 = Community + subs + Docs + Contact
+    // Group: column 1 = Platform, column 2 = Community + subs + Docs + Contact
     return (
         <div style={styles.navColumnsWrapper}>
             {/* Column 1 */}
@@ -253,32 +244,6 @@ function renderNavColumns(
             </ul>
 
             {/* Column 2 */}
-            <ul style={{ ...styles.navColumn, ...styles.navColumnWide }}>
-                <li style={styles.navItem}>
-                    <span style={styles.navItemHeader}>
-                        Protocol<sup style={styles.navSup}>3</sup>
-                    </span>
-                    <ul style={styles.subList}>
-                        <li style={styles.subItem}>
-                            <a href="#" style={styles.subItemLink}>
-                                Staking
-                            </a>
-                        </li>
-                        <li style={styles.subItem}>
-                            <a href="#" style={styles.subItemLink}>
-                                Governance
-                            </a>
-                        </li>
-                        <li style={styles.subItem}>
-                            <a href="#" style={styles.subItemLink}>
-                                Tokenomics
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-            </ul>
-
-            {/* Column 3 */}
             <ul style={styles.navColumn}>
                 <li style={styles.navItem}>
                     <span style={styles.navItemHeader}>
@@ -287,7 +252,7 @@ function renderNavColumns(
                     <ul style={styles.subList}>
                         <li style={styles.subItem}>
                             <a href="#" style={styles.subItemLink}>
-                                Discord
+                                Community
                             </a>
                         </li>
                         <li style={styles.subItem}>

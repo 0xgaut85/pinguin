@@ -4,7 +4,7 @@ import ShowcaseExplorer from '../applications/ShowcaseExplorer';
 import GatewayTerminal from '../applications/GatewayTerminal';
 import ExecutionMonitor from '../applications/ExecutionMonitor';
 import ShutdownSequence from './ShutdownSequence';
-import Pinordle from '../applications/Pinordle';
+import VideoPlayer from '../applications/VideoPlayer';
 import Toolbar from './Toolbar';
 import DesktopShortcut, { DesktopShortcutProps } from './DesktopShortcut';
 import PolicyEditor from '../applications/PolicyEditor';
@@ -48,11 +48,11 @@ const APPLICATIONS: {
         shortcutIcon: 'scrabbleIcon',
         component: PolicyEditor,
     },
-    pinordle: {
-        key: 'pinordle',
-        name: 'Pinordle',
-        shortcutIcon: 'henordleIcon',
-        component: Pinordle,
+    video: {
+        key: 'video',
+        name: 'intro.mp4',
+        shortcutIcon: 'videoIcon',
+        component: VideoPlayer,
     },
     agent: {
         key: 'agent',

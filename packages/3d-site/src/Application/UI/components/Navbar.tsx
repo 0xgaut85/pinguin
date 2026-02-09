@@ -15,9 +15,10 @@ const NAV_ITEMS: NavItem[] = [
     {
         label: 'pinion OS',
         children: [
+            { label: 'GitHub', href: '#' },
+            { label: 'X/Twitter', href: 'https://x.com/PinionOS' },
+            { label: 'Community', href: '#' },
             { label: 'Docs', href: '#' },
-            { label: 'Contact', href: '#' },
-            { label: 'Community', href: 'https://x.com/PinionOS' },
         ],
     },
 ];

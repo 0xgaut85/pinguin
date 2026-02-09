@@ -183,13 +183,9 @@ export default class MonitorScreen extends EventEmitter {
         };
 
         // Set iframe attributes
-        // In dev mode, the inner site runs on localhost:3000 via react-scripts
-        // In production, the inner site is served from the /os/ path on the same domain
-        iframe.src = 'http://localhost:3000/';
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('prod')) {
-            iframe.src = '/os/';
-        }
+        // Auto-detect: if not on localhost, use production path
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        iframe.src = isLocal ? 'http://localhost:3000/' : '/os/';
         iframe.style.width = this.screenSize.width + 'px';
         iframe.style.height = this.screenSize.height + 'px';
         iframe.style.padding = IFRAME_PADDING + 'px';

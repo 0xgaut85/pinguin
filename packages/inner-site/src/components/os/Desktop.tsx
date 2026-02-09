@@ -205,7 +205,7 @@ const Desktop: React.FC<DesktopProps> = (props) => {
         <div style={styles.desktop}>
             {/* Desktop wallpaper logo */}
             <div style={styles.wallpaper}>
-                <img src="/logo.svg" alt="pinion" style={styles.wallpaperLogo} />
+                <img src={process.env.PUBLIC_URL + '/logo.svg'} alt="pinion" style={styles.wallpaperLogo} />
             </div>
             {/* For each window in windows, loop over and render  */}
             {Object.keys(windows).map((key) => {

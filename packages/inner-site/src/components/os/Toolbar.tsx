@@ -9,12 +9,14 @@ export interface ToolbarProps {
     windows: DesktopWindows;
     toggleMinimize: (key: string) => void;
     shutdown: () => void;
+    walletAddress?: string | null;
 }
 
 const Toolbar: React.FC<ToolbarProps> = ({
     windows,
     toggleMinimize,
     shutdown,
+    walletAddress,
 }) => {
     const getTime = () => {
         const date = new Date();
@@ -180,9 +182,29 @@ const Toolbar: React.FC<ToolbarProps> = ({
                         })}
                     </div>
                 </div>
-                <div style={styles.time}>
-                    <Icon style={styles.volumeIcon} icon="volumeOn" />
-                    <p style={styles.timeText}>{time}</p>
+                <div style={styles.statusAndTime}>
+                    <div style={Object.assign(
+                        {},
+                        styles.walletStatus,
+                        walletAddress ? styles.walletOnline : styles.walletOffline
+                    )}>
+                        <span style={Object.assign(
+                            {},
+                            styles.statusDot,
+                            walletAddress ? styles.dotOnline : styles.dotOffline
+                        )}>●</span>
+                        <p style={Object.assign(
+                            {},
+                            styles.statusText,
+                            walletAddress ? styles.statusTextOnline : styles.statusTextOffline
+                        )}>
+                            {walletAddress ? 'online' : 'offline'}
+                        </p>
+                    </div>
+                    <div style={styles.time}>
+                        <Icon style={styles.volumeIcon} icon="volumeOn" />
+                        <p style={styles.timeText}>{time}</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -375,6 +397,45 @@ const styles: StyleSheetCSS = {
     timeText: {
         fontSize: 12,
         fontFamily: 'MSSerif',
+    },
+    statusAndTime: {
+        flexShrink: 1,
+        alignItems: 'center',
+        display: 'flex',
+        gap: 4,
+    },
+    walletStatus: {
+        height: 24,
+        boxSizing: 'border-box',
+        paddingLeft: 6,
+        paddingRight: 6,
+        alignItems: 'center',
+        border: `1px solid ${Colors.white}`,
+        borderTopColor: Colors.darkGray,
+        borderLeftColor: Colors.darkGray,
+        cursor: 'default',
+    },
+    walletOnline: {},
+    walletOffline: {},
+    statusDot: {
+        fontSize: 7,
+        marginRight: 3,
+    },
+    dotOnline: {
+        color: '#00cc44',
+    },
+    dotOffline: {
+        color: '#cc0000',
+    },
+    statusText: {
+        fontSize: 10,
+        fontFamily: 'MSSerif',
+    },
+    statusTextOnline: {
+        color: '#006622',
+    },
+    statusTextOffline: {
+        color: '#cc0000',
     },
 };
 

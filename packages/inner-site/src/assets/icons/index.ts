@@ -21,6 +21,8 @@ import close from './close.png';
 import agentIcon from './agentIcon.png';
 import videoIcon from './videoIcon.png';
 import windowVideoIcon from './windowVideoIcon.png';
+import walletIcon from './walletIcon.png';
+import windowWalletIcon from './windowWalletIcon.png';
 
 const icons = {
     windowResize: windowResize,
@@ -44,6 +46,8 @@ const icons = {
     agentIcon: agentIcon,
     videoIcon: videoIcon,
     windowVideoIcon: windowVideoIcon,
+    walletIcon: walletIcon,
+    windowWalletIcon: windowWalletIcon,
 };
 
 export type IconName = keyof typeof icons;

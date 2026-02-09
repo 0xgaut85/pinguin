@@ -13,6 +13,17 @@ const API_URL =
     process.env.REACT_APP_API_URL ||
     (window.location.hostname === 'localhost' ? 'http://localhost:3001' : '');
 
+const renderMarkdown = (text: string): React.ReactNode => {
+    // Split by **bold** markers. Odd indices are bold text.
+    const parts = text.split(/\*\*(.*?)\*\*/g);
+    return parts.map((part, i) => {
+        if (i % 2 === 1) {
+            return <strong key={i}>{part}</strong>;
+        }
+        return part;
+    });
+};
+
 const PinionAgent: React.FC<PinionAgentProps> = (props) => {
     const [messages, setMessages] = useState<ChatMessage[]>([
         {
@@ -132,7 +143,7 @@ const PinionAgent: React.FC<PinionAgentProps> = (props) => {
                                         : styles.agentText
                                 }
                             >
-                                {msg.content}
+                                {renderMarkdown(msg.content)}
                             </span>
                         </div>
                     ))}

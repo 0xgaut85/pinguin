@@ -11,6 +11,7 @@ import PolicyEditor from '../applications/PolicyEditor';
 import { IconName } from '../../assets/icons';
 import Credits from '../applications/Credits';
 import PinionAgent from '../applications/PinionAgent';
+import ConnectWallet from '../applications/ConnectWallet';
 
 export interface DesktopProps {}
 
@@ -54,6 +55,12 @@ const APPLICATIONS: {
         shortcutIcon: 'videoIcon',
         component: VideoPlayer,
     },
+    wallet: {
+        key: 'wallet',
+        name: 'Connect Wallet',
+        shortcutIcon: 'walletIcon',
+        component: ConnectWallet,
+    },
     agent: {
         key: 'agent',
         name: 'Pinion Agent',
@@ -75,6 +82,7 @@ const Desktop: React.FC<DesktopProps> = (props) => {
 
     const [shutdown, setShutdown] = useState(false);
     const [numShutdowns, setNumShutdowns] = useState(1);
+    const [walletAddress, setWalletAddress] = useState<string | null>(null);
 
     useEffect(() => {
         if (shutdown === true) {
@@ -87,6 +95,7 @@ const Desktop: React.FC<DesktopProps> = (props) => {
         const newShortcuts: DesktopShortcutProps[] = [];
         Object.keys(APPLICATIONS).forEach((key) => {
             const app = APPLICATIONS[key];
+            const extraProps = app.key === 'wallet' ? { onWalletChange: setWalletAddress } : {};
             newShortcuts.push({
                 shortcutName: app.name,
                 icon: app.shortcutIcon,
@@ -94,6 +103,7 @@ const Desktop: React.FC<DesktopProps> = (props) => {
                     addWindow(
                         app.key,
                         <app.component
+                            {...extraProps}
                             onInteract={() => onWindowInteract(app.key)}
                             onMinimize={() => minimizeWindow(app.key)}
                             onClose={() => removeWindow(app.key)}
@@ -250,6 +260,7 @@ const Desktop: React.FC<DesktopProps> = (props) => {
                 windows={windows}
                 toggleMinimize={toggleMinimize}
                 shutdown={startShutdown}
+                walletAddress={walletAddress}
             />
         </div>
     ) : (

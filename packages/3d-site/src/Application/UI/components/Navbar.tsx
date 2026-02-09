@@ -12,25 +12,14 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-    { label: 'Platform', href: '#' },
     {
-        label: 'Protocol',
+        label: 'pinion OS',
         children: [
-            { label: 'Staking', href: '#' },
-            { label: 'Governance', href: '#' },
-            { label: 'Tokenomics', href: '#' },
+            { label: 'Docs', href: '#' },
+            { label: 'Contact', href: '#' },
+            { label: 'Community', href: 'https://x.com/PinionOS' },
         ],
     },
-    {
-        label: 'Community',
-        children: [
-            { label: 'Discord', href: '#' },
-            { label: 'Twitter/X', href: 'https://x.com/PinionOS' },
-            { label: 'GitHub', href: '#' },
-        ],
-    },
-    { label: 'Docs', href: '#' },
-    { label: 'Contact', href: '#' },
 ];
 
 const Navbar: React.FC<NavbarProps> = ({ visible }) => {

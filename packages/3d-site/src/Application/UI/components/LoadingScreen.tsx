@@ -78,78 +78,18 @@ const LoadingScreen: React.FC<LoadingProps> = () => {
                         transition={{ duration: 0.5 }}
                         style={styles.centerContent}
                     >
-                        {/* Animated reticle SVG */}
+                        {/* Logo spinner */}
                         <div style={styles.reticleContainer}>
-                            <svg
-                                width="80"
-                                height="80"
-                                viewBox="0 0 80 80"
-                                fill="none"
+                            <img
+                                src="/logo.svg"
+                                alt="pinion"
                                 style={{
+                                    height: 64,
+                                    width: 'auto',
                                     animation: 'reticleSpin 4s linear infinite',
+                                    opacity: 0.85,
                                 }}
-                            >
-                                {/* Outer ring */}
-                                <circle
-                                    cx="40"
-                                    cy="40"
-                                    r="36"
-                                    stroke="#FF5841"
-                                    strokeWidth="1"
-                                    strokeDasharray="8 4"
-                                    opacity="0.6"
-                                />
-                                {/* Inner ring */}
-                                <circle
-                                    cx="40"
-                                    cy="40"
-                                    r="24"
-                                    stroke="#FF5841"
-                                    strokeWidth="1.5"
-                                    strokeDasharray="4 8"
-                                    opacity="0.8"
-                                />
-                                {/* Crosshair lines */}
-                                <line
-                                    x1="40"
-                                    y1="8"
-                                    x2="40"
-                                    y2="20"
-                                    stroke="#FF5841"
-                                    strokeWidth="1.5"
-                                />
-                                <line
-                                    x1="40"
-                                    y1="60"
-                                    x2="40"
-                                    y2="72"
-                                    stroke="#FF5841"
-                                    strokeWidth="1.5"
-                                />
-                                <line
-                                    x1="8"
-                                    y1="40"
-                                    x2="20"
-                                    y2="40"
-                                    stroke="#FF5841"
-                                    strokeWidth="1.5"
-                                />
-                                <line
-                                    x1="60"
-                                    y1="40"
-                                    x2="72"
-                                    y2="40"
-                                    stroke="#FF5841"
-                                    strokeWidth="1.5"
-                                />
-                                {/* Center dot */}
-                                <circle
-                                    cx="40"
-                                    cy="40"
-                                    r="2"
-                                    fill="#FF5841"
-                                />
-                            </svg>
+                            />
                         </div>
 
                         {/* Loading text */}

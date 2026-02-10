@@ -12,7 +12,7 @@ const Developers: React.FC<DevelopersProps> = (props) => {
                         <h1>Developers</h1>
                     </div>
                     <div style={styles.headerRow}>
-                        <h3>Build with Pinion</h3>
+                        <h3>Build with Pinion &amp; x402</h3>
                     </div>
                 </div>
             </div>
@@ -22,130 +22,153 @@ const Developers: React.FC<DevelopersProps> = (props) => {
                 <h2>Getting Started</h2>
                 <br />
                 <p>
-                    Pinion is designed to integrate directly into existing
-                    software infrastructure with minimal friction. Whether
-                    you're building autonomous agents, API services, or
-                    distributed systems, Pinion's SDK provides everything you
-                    need to enable economic execution.
+                    Pinion exposes on-chain intelligence and AI skills as
+                    paywalled HTTP endpoints on <b>Base mainnet</b>.
+                    Every call costs <b>$0.01 USDC</b> and is gated via
+                    the <b>x402</b> protocol — no API keys, no
+                    subscriptions, just a wallet signature per request.
                 </p>
                 <br />
                 <p>
-                    The integration follows a simple pattern: register your
-                    capabilities, define pricing and let the protocol handle
-                    discovery, payment and invocation.
+                    The server uses{' '}
+                    <b>x402-express</b> middleware to enforce payments.
+                    Clients receive a <code style={styles.inlineCode}>402 Payment Required</code>{' '}
+                    response, sign an EIP-3009 <code style={styles.inlineCode}>TransferWithAuthorization</code>,
+                    and retry with the <code style={styles.inlineCode}>X-PAYMENT</code> header.
+                    The facilitator verifies the payment on-chain and forwards the
+                    request to the endpoint.
                 </p>
             </div>
 
-            {/* CODE EXAMPLE */}
+            {/* LIVE ENDPOINTS */}
             <div style={styles.headerContainer}>
                 <div style={styles.header}>
                     <div style={styles.headerRow}>
-                        <h2>Quick Example</h2>
+                        <h2>Live Endpoints</h2>
                     </div>
                 </div>
             </div>
             <div className="text-block">
-                <pre style={styles.codeBlock}>
-{`// Register a capability with Pinion
-import { PinionSDK } from '@pinion/sdk';
-
-const pinion = new PinionSDK({
-  identity: process.env.AGENT_IDENTITY,
-  network: 'mainnet',
-});
-
-// Publish a priced capability
-await pinion.capabilities.register({
-  name: 'text-analysis',
-  version: '1.0.0',
-  pricing: {
-    model: 'per-invocation',
-    amount: '0.001',
-    currency: 'ETH',
-  },
-  trust: {
-    minScore: 50,
-    requiredRegistries: ['erc8004-main'],
-  },
-  handler: async (input) => {
-    const result = await analyzeText(input);
-    return result;
-  },
-});
-
-console.log('Capability registered.');`}
-                </pre>
+                <p>
+                    All endpoints are live at{' '}
+                    <code style={styles.inlineCode}>https://pinionos.com/skill/</code>.
+                    Browse the free catalog at{' '}
+                    <a href="https://pinionos.com/skill/catalog" target="_blank" rel="noopener noreferrer" style={styles.link}>
+                        /skill/catalog
+                    </a>.
+                </p>
+                <br />
+                <div style={styles.endpointTable}>
+                    <div style={styles.endpointHeader}>
+                        <span style={{ ...styles.endpointCell, flex: 2.5 }}>Endpoint</span>
+                        <span style={{ ...styles.endpointCell, flex: 0.7 }}>Method</span>
+                        <span style={{ ...styles.endpointCell, flex: 0.7 }}>Price</span>
+                        <span style={{ ...styles.endpointCell, flex: 3 }}>Description</span>
+                    </div>
+                    {[
+                        { path: '/skill/balance/:address', method: 'GET', desc: 'ETH + USDC balances for any Base address' },
+                        { path: '/skill/tx/:hash', method: 'GET', desc: 'Decoded transaction details for any Base tx' },
+                        { path: '/skill/price/:token', method: 'GET', desc: 'Current USD price for ETH or other tokens' },
+                        { path: '/skill/wallet/generate', method: 'GET', desc: 'Generate a fresh Base wallet keypair' },
+                        { path: '/skill/chat', method: 'POST', desc: 'Chat with the Pinion AI Agent' },
+                    ].map((ep, i) => (
+                        <div key={i} style={i % 2 === 0 ? styles.endpointRow : styles.endpointRowAlt}>
+                            <code style={{ ...styles.endpointCell, flex: 2.5, fontSize: 10, color: '#00ff88' }}>{ep.path}</code>
+                            <span style={{ ...styles.endpointCell, flex: 0.7 }}>{ep.method}</span>
+                            <span style={{ ...styles.endpointCell, flex: 0.7 }}>$0.01</span>
+                            <span style={{ ...styles.endpointCell, flex: 3 }}>{ep.desc}</span>
+                        </div>
+                    ))}
+                </div>
             </div>
 
-            {/* INVOKING */}
+            {/* SERVER EXAMPLE */}
+            <div style={styles.headerContainer}>
+                <div style={styles.header}>
+                    <div style={styles.headerRow}>
+                        <h2>Server — x402-express</h2>
+                    </div>
+                </div>
+            </div>
             <div className="text-block">
-                <h2>Invoking a Capability</h2>
+                <p>
+                    Protect any Express route with a single middleware call.
+                    The facilitator handles on-chain USDC settlement.
+                </p>
                 <br />
                 <pre style={styles.codeBlock}>
-{`// Discover and invoke a capability
-const capabilities = await pinion.discover({
-  category: 'text-analysis',
-  maxPrice: '0.005',
-  minTrustScore: 40,
-});
+{`const express = require('express');
+const { paymentMiddleware } = require('x402-express');
 
-const result = await pinion.invoke(
-  capabilities[0].id,
-  {
-    text: 'Analyze this document...',
-    format: 'summary',
-  },
-  {
-    budget: '0.002',
-    timeout: 30000,
-  }
+const app = express();
+
+const payTo   = '0x101C...0acf';       // your USDC receive address
+const network = 'base';
+
+app.use(
+  paymentMiddleware(
+    payTo,
+    {
+      'GET /balance/[address]': {
+        price: '$0.01', network,
+        config: { description: 'ETH + USDC balances' },
+      },
+      'GET /wallet/generate': {
+        price: '$0.01', network,
+        config: { description: 'Generate a Base keypair' },
+      },
+    },
+    { url: 'https://x402.org/facilitator' },
+  )
 );
 
-// Payment handled automatically via x402
-console.log('Result:', result.data);
-console.log('Cost:', result.payment.amount);`}
+app.get('/balance/:address', async (req, res) => {
+  // x402 payment already verified at this point
+  const balance = await getBalance(req.params.address);
+  res.json(balance);
+});`}
                 </pre>
             </div>
 
-            {/* SDK FEATURES */}
-            <div style={styles.headerContainer}>
-                <div style={styles.header}>
-                    <div style={styles.headerRow}>
-                        <h2>SDK Features</h2>
-                    </div>
-                </div>
-            </div>
+            {/* CLIENT EXAMPLE */}
             <div className="text-block">
-                <div style={styles.featureGrid}>
-                    <div style={styles.featureCard}>
-                        <h3>Capability Registry</h3>
-                        <p>
-                            Publish and discover capabilities with automatic
-                            pricing, versioning and trust metadata.
-                        </p>
-                    </div>
-                    <div style={styles.featureCard}>
-                        <h3>Policy Engine</h3>
-                        <p>
-                            Define spending limits, trust requirements, and
-                            access policies that are enforced automatically.
-                        </p>
-                    </div>
-                    <div style={styles.featureCard}>
-                        <h3>Payment Abstraction</h3>
-                        <p>
-                            x402 integration handles all payment negotiation,
-                            authorization and settlement transparently.
-                        </p>
-                    </div>
-                    <div style={styles.featureCard}>
-                        <h3>Observability</h3>
-                        <p>
-                            Full execution tracing with cost attribution,
-                            performance metrics and audit logging.
-                        </p>
-                    </div>
-                </div>
+                <h2>Client — x402 Payment Flow</h2>
+                <br />
+                <pre style={styles.codeBlock}>
+{`// 1. Make the initial request
+const res = await fetch(
+  'https://pinionos.com/skill/balance/0x...'
+);
+
+if (res.status === 402) {
+  // 2. Parse payment requirements from response
+  const requirements = await res.json();
+  const { payTo, maxAmountRequired, asset } = requirements;
+
+  // 3. Sign EIP-3009 TransferWithAuthorization
+  const sig = await ethereum.request({
+    method: 'eth_signTypedData_v4',
+    params: [walletAddress, typedData],
+  });
+
+  // 4. Retry with X-PAYMENT header
+  const paid = await fetch(
+    'https://pinionos.com/skill/balance/0x...', {
+      headers: {
+        'X-PAYMENT': btoa(JSON.stringify({
+          x402Version: 1,
+          scheme: 'exact',
+          network: 'base',
+          payload: { signature: sig, authorization },
+        })),
+      },
+    }
+  );
+
+  const data = await paid.json();
+  // { eth: "0.042", usdc: "12.50" }
+}`}
+                </pre>
             </div>
 
             {/* COMMUNITY */}
@@ -174,10 +197,17 @@ console.log('Cost:', result.payment.amount);`}
                             <p>@PinionOS</p>
                         </div>
                     </a>
-                    <div style={styles.socialCard}>
-                        <h3>Discord</h3>
-                        <p>Coming soon</p>
-                    </div>
+                    <a
+                        href="https://www.x402scan.com/server/49a688db-0234-4609-948c-c3eee1719e5d"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={styles.socialLink}
+                    >
+                        <div style={styles.socialCard}>
+                            <h3>x402scan Server</h3>
+                            <p>View live endpoint stats</p>
+                        </div>
+                    </a>
                     <div style={styles.socialCard}>
                         <h3>GitHub</h3>
                         <p>Coming soon</p>
@@ -215,15 +245,49 @@ const styles: StyleSheetCSS = {
         whiteSpace: 'pre',
         border: '1px solid #333',
     },
-    featureGrid: {
-        flexDirection: 'column',
+    inlineCode: {
+        fontFamily: 'monospace',
+        fontSize: 11,
+        backgroundColor: '#1a1a1a',
+        color: '#00ff88',
+        padding: '1px 5px',
+        border: '1px solid #333',
     },
-    featureCard: {
-        padding: 16,
-        marginBottom: 12,
-        border: '1px solid #ccc',
+    link: {
+        color: '#E8530E',
+        textDecoration: 'underline',
+    },
+    endpointTable: {
         flexDirection: 'column',
+        border: '1px solid #ccc',
+        width: '100%',
+        overflow: 'auto',
+    },
+    endpointHeader: {
+        display: 'flex',
+        backgroundColor: '#222',
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 11,
+        fontFamily: 'monospace',
+    },
+    endpointRow: {
+        display: 'flex',
         backgroundColor: '#f8f8f8',
+        fontSize: 11,
+        fontFamily: 'monospace',
+    },
+    endpointRowAlt: {
+        display: 'flex',
+        backgroundColor: '#eee',
+        fontSize: 11,
+        fontFamily: 'monospace',
+    },
+    endpointCell: {
+        padding: '8px 10px',
+        borderRight: '1px solid #ccc',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
     },
     socialLinks: {
         flexDirection: 'column',

@@ -14,7 +14,15 @@ interface FooterNavItem {
 }
 
 const FOOTER_NAV: FooterNavItem[] = [
-    { label: 'Platform', href: '#' },
+    {
+        label: 'Platform',
+        isHeader: true,
+        children: [
+            { label: 'x402 Server', href: 'https://www.x402scan.com/server/49a688db-0234-4609-948c-c3eee1719e5d' },
+            { label: 'Docs', href: '/os/' },
+            { label: 'Contact', href: '#' },
+        ],
+    },
     {
         label: 'Community',
         isHeader: true,
@@ -24,8 +32,6 @@ const FOOTER_NAV: FooterNavItem[] = [
             { label: 'GitHub', href: '#' },
         ],
     },
-    { label: 'Docs', href: '#' },
-    { label: 'Contact', href: '#' },
 ];
 
 const currentYear = new Date().getFullYear();
@@ -231,19 +237,36 @@ function renderNavColumns(
     onOpenModal?: (modal: 'privacy' | 'terms') => void,
     onClose?: () => void
 ) {
-    // Group: column 1 = Platform, column 2 = Community + subs + Docs + Contact
+    // Group: column 1 = Platform + subs, column 2 = Community + subs
     return (
         <div style={styles.navColumnsWrapper}>
-            {/* Column 1 */}
+            {/* Column 1 — Platform */}
             <ul style={styles.navColumn}>
                 <li style={styles.navItem}>
-                    <a href="#" style={styles.navItemLink}>
-                        Platform
-                    </a>
+                    <span style={styles.navItemHeader}>
+                        Platform<sup style={styles.navSup}>3</sup>
+                    </span>
+                    <ul style={styles.subList}>
+                        <li style={styles.subItem}>
+                            <a href="https://www.x402scan.com/server/49a688db-0234-4609-948c-c3eee1719e5d" style={styles.subItemLink} target="_blank" rel="noopener noreferrer">
+                                x402 Server
+                            </a>
+                        </li>
+                        <li style={styles.subItem}>
+                            <a href="/os/" style={styles.subItemLink}>
+                                Docs
+                            </a>
+                        </li>
+                        <li style={styles.subItem}>
+                            <a href="#" style={styles.subItemLink}>
+                                Contact
+                            </a>
+                        </li>
+                    </ul>
                 </li>
             </ul>
 
-            {/* Column 2 */}
+            {/* Column 2 — Community */}
             <ul style={styles.navColumn}>
                 <li style={styles.navItem}>
                     <span style={styles.navItemHeader}>
@@ -266,16 +289,6 @@ function renderNavColumns(
                             </a>
                         </li>
                     </ul>
-                </li>
-                <li style={styles.navItem}>
-                    <a href="#" style={styles.navItemLink}>
-                        Docs
-                    </a>
-                </li>
-                <li style={styles.navItem}>
-                    <a href="#" style={styles.navItemLink}>
-                        Contact
-                    </a>
                 </li>
             </ul>
         </div>

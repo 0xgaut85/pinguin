@@ -18,7 +18,8 @@ const NAV_ITEMS: NavItem[] = [
             { label: 'GitHub', href: '#' },
             { label: 'X/Twitter', href: 'https://x.com/PinionOS' },
             { label: 'Community', href: '#' },
-            { label: 'Docs', href: '#' },
+            { label: 'Docs', href: '/os/' },
+            { label: 'x402 Server', href: 'https://www.x402scan.com/server/49a688db-0234-4609-948c-c3eee1719e5d' },
         ],
     },
 ];

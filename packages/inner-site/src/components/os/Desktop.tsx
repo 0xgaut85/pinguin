@@ -2,16 +2,15 @@ import React, { useCallback, useEffect, useState } from 'react';
 import Colors from '../../constants/colors';
 import ShowcaseExplorer from '../applications/ShowcaseExplorer';
 import GatewayTerminal from '../applications/GatewayTerminal';
-import ExecutionMonitor from '../applications/ExecutionMonitor';
 import ShutdownSequence from './ShutdownSequence';
 import VideoPlayer from '../applications/VideoPlayer';
 import Toolbar from './Toolbar';
 import DesktopShortcut, { DesktopShortcutProps } from './DesktopShortcut';
-import PolicyEditor from '../applications/PolicyEditor';
 import { IconName } from '../../assets/icons';
 import Credits from '../applications/Credits';
 import PinionAgent from '../applications/PinionAgent';
 import ConnectWallet from '../applications/ConnectWallet';
+import OpenClawGateway from '../applications/OpenClawGateway';
 
 export interface DesktopProps {}
 
@@ -37,18 +36,6 @@ const APPLICATIONS: {
         shortcutIcon: 'doomIcon',
         component: GatewayTerminal,
     },
-    monitor: {
-        key: 'monitor',
-        name: 'Execution Monitor',
-        shortcutIcon: 'trailIcon',
-        component: ExecutionMonitor,
-    },
-    policy: {
-        key: 'policy',
-        name: 'Policy Editor',
-        shortcutIcon: 'scrabbleIcon',
-        component: PolicyEditor,
-    },
     video: {
         key: 'video',
         name: 'intro.mp4',
@@ -60,6 +47,12 @@ const APPLICATIONS: {
         name: 'Connect Wallet',
         shortcutIcon: 'walletIcon',
         component: ConnectWallet,
+    },
+    openclaw: {
+        key: 'openclaw',
+        name: 'OpenClaw Gateway',
+        shortcutIcon: 'openclawIcon',
+        component: OpenClawGateway,
     },
     agent: {
         key: 'agent',

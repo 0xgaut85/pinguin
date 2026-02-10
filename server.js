@@ -3,6 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const apiRouter = require('./packages/api/server.js');
+const skillRouter = require('./packages/api/openclaw-skill.js');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -12,6 +13,9 @@ app.use(express.json());
 
 // Mount API routes at /api
 app.use('/api', apiRouter);
+
+// Mount x402-paywalled OpenClaw skill at /skill
+app.use('/skill', skillRouter);
 
 // Serve inner-site at /os/
 app.use('/os', express.static(path.join(__dirname, 'packages/inner-site/build'), {
@@ -38,4 +42,5 @@ app.listen(PORT, () => {
     console.log(`  3d-site:    http://localhost:${PORT}/`);
     console.log(`  inner-site: http://localhost:${PORT}/os/`);
     console.log(`  api:        http://localhost:${PORT}/api/`);
+    console.log(`  skill:      http://localhost:${PORT}/skill/catalog`);
 });

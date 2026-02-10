@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import Colors from '../../constants/colors';
 import ShowcaseExplorer from '../applications/ShowcaseExplorer';
-import GatewayTerminal from '../applications/GatewayTerminal';
+
 import ShutdownSequence from './ShutdownSequence';
 import VideoPlayer from '../applications/VideoPlayer';
 import Toolbar from './Toolbar';
@@ -11,6 +11,7 @@ import Credits from '../applications/Credits';
 import PinionAgent from '../applications/PinionAgent';
 import ConnectWallet from '../applications/ConnectWallet';
 import OpenClawGateway from '../applications/OpenClawGateway';
+import ServerViewer from '../applications/ServerViewer';
 
 export interface DesktopProps {}
 
@@ -29,12 +30,6 @@ const APPLICATIONS: {
         name: 'Protocol Explorer',
         shortcutIcon: 'showcaseIcon',
         component: ShowcaseExplorer,
-    },
-    terminal: {
-        key: 'terminal',
-        name: 'Gateway Terminal',
-        shortcutIcon: 'doomIcon',
-        component: GatewayTerminal,
     },
     video: {
         key: 'video',
@@ -59,6 +54,12 @@ const APPLICATIONS: {
         name: 'Pinion Agent',
         shortcutIcon: 'agentIcon',
         component: PinionAgent,
+    },
+    server: {
+        key: 'server',
+        name: 'Server',
+        shortcutIcon: 'serverIcon',
+        component: ServerViewer,
     },
     credits: {
         key: 'credits',

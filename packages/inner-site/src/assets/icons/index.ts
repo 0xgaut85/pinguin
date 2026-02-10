@@ -25,6 +25,8 @@ import walletIcon from './walletIcon.png';
 import windowWalletIcon from './windowWalletIcon.png';
 import openclawIcon from './openclawIcon.png';
 import windowOpenclawIcon from './windowOpenclawIcon.png';
+import serverIcon from './serverIcon.png';
+import windowServerIcon from './windowServerIcon.png';
 
 const icons = {
     windowResize: windowResize,
@@ -52,6 +54,8 @@ const icons = {
     windowWalletIcon: windowWalletIcon,
     openclawIcon: openclawIcon,
     windowOpenclawIcon: windowOpenclawIcon,
+    serverIcon: serverIcon,
+    windowServerIcon: windowServerIcon,
 };
 
 export type IconName = keyof typeof icons;

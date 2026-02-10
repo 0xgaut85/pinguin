@@ -19,7 +19,7 @@ todos:
     status: pending
   - id: collect_urls
     content: Capture real tweet URLs (no placeholders) for all 24 selected tweets
-    status: pending
+    status: completed
   - id: retweet_tweets
     content: Retweet all 24 tweets in chronological order
     status: in_progress

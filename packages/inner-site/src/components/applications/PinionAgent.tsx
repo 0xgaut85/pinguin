@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import Window from '../os/Window';
+import { signX402Payment, getApiBase, PaymentRequirements } from '../../utils/x402';
 
 export interface PinionAgentProps extends WindowAppProps {}
 
@@ -7,11 +8,6 @@ interface ChatMessage {
     role: 'user' | 'assistant';
     content: string;
 }
-
-// In production, API is on same origin at /api. In dev, use localhost:3001
-const API_URL =
-    process.env.REACT_APP_API_URL ||
-    (window.location.hostname === 'localhost' ? 'http://localhost:3001' : '');
 
 const renderMarkdown = (text: string): React.ReactNode => {
     // Split by **bold** markers. Odd indices are bold text.
@@ -35,6 +31,8 @@ const PinionAgent: React.FC<PinionAgentProps> = (props) => {
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [walletAddress, setWalletAddress] = useState<string | null>(null);
+    const [paymentStatus, setPaymentStatus] = useState<string | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -53,9 +51,37 @@ const PinionAgent: React.FC<PinionAgentProps> = (props) => {
         }
     }, []);
 
+    // Detect connected wallet
+    useEffect(() => {
+        const provider = (window as any).ethereum;
+        if (!provider) return;
+
+        provider.request({ method: 'eth_accounts' }).then((accounts: string[]) => {
+            if (accounts.length > 0) setWalletAddress(accounts[0]);
+        }).catch(() => {});
+
+        const handleAccountsChanged = (accounts: string[]) => {
+            setWalletAddress(accounts.length > 0 ? accounts[0] : null);
+        };
+        provider.on('accountsChanged', handleAccountsChanged);
+        return () => {
+            provider.removeListener('accountsChanged', handleAccountsChanged);
+        };
+    }, []);
+
     const sendMessage = useCallback(async () => {
         const trimmed = input.trim();
         if (!trimmed || isLoading) return;
+        if (!walletAddress) {
+            setError('connect your wallet first to chat ($0.01 USDC per message)');
+            return;
+        }
+
+        const provider = (window as any).ethereum;
+        if (!provider) {
+            setError('no wallet provider found');
+            return;
+        }
 
         const userMessage: ChatMessage = { role: 'user', content: trimmed };
         const updatedMessages = [...messages, userMessage];
@@ -64,33 +90,95 @@ const PinionAgent: React.FC<PinionAgentProps> = (props) => {
         setInput('');
         setIsLoading(true);
         setError(null);
+        setPaymentStatus(null);
 
         try {
-            const res = await fetch(`${API_URL}/api/chat`, {
+            const chatUrl = `${getApiBase()}/skill/chat`;
+
+            // Step 1: Send initial request (will get 402)
+            setPaymentStatus('requesting...');
+            const initialRes = await fetch(chatUrl, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
                 body: JSON.stringify({ messages: updatedMessages }),
             });
 
-            if (!res.ok) {
-                throw new Error(`server returned ${res.status}`);
+            if (initialRes.status !== 402) {
+                // Somehow didn't get 402 (shouldn't happen)
+                if (initialRes.ok) {
+                    const data = await initialRes.json();
+                    const assistantMessage: ChatMessage = {
+                        role: 'assistant',
+                        content: data.response,
+                    };
+                    setMessages((prev) => [...prev, assistantMessage]);
+                    setPaymentStatus(null);
+                    setIsLoading(false);
+                    return;
+                }
+                throw new Error(`server returned ${initialRes.status}`);
             }
 
-            const data = await res.json();
+            // Step 2: Parse 402 payment requirements
+            const paymentData = await initialRes.json();
+            const { x402Version, accepts } = paymentData;
+
+            if (!accepts || accepts.length === 0) {
+                throw new Error('no payment requirements returned');
+            }
+
+            const requirement: PaymentRequirements = accepts[0];
+
+            // Step 3: Sign x402 payment
+            setPaymentStatus('sign payment in wallet...');
+            const paymentHeader = await signX402Payment(
+                provider,
+                walletAddress,
+                requirement,
+                x402Version
+            );
+
+            // Step 4: Retry with X-PAYMENT header
+            setPaymentStatus('verifying payment...');
+            const paidRes = await fetch(chatUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-PAYMENT': paymentHeader,
+                },
+                body: JSON.stringify({ messages: updatedMessages }),
+            });
+
+            if (!paidRes.ok) {
+                const errData = await paidRes.json().catch(() => ({ error: 'unknown' }));
+                throw new Error(errData.error || errData.invalidReason || `server returned ${paidRes.status}`);
+            }
+
+            const data = await paidRes.json();
             const assistantMessage: ChatMessage = {
                 role: 'assistant',
                 content: data.response,
             };
 
             setMessages((prev) => [...prev, assistantMessage]);
+            setPaymentStatus(null);
         } catch (err: any) {
-            setError(
-                err.message || 'failed to reach the agent'
-            );
+            if (err.message?.includes('User denied') || err.message?.includes('user rejected')) {
+                setError('payment rejected');
+                // Remove the user message since payment was rejected
+                setMessages(messages);
+            } else {
+                setError(err.message || 'failed to reach the agent');
+            }
+            setPaymentStatus(null);
         } finally {
             setIsLoading(false);
         }
-    }, [input, messages, isLoading]);
+    }, [input, messages, isLoading, walletAddress]);
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -111,7 +199,7 @@ const PinionAgent: React.FC<PinionAgentProps> = (props) => {
             closeWindow={props.onClose}
             onInteract={props.onInteract}
             minimizeWindow={props.onMinimize}
-            bottomLeftText={'Pinion Agent v1.0'}
+            bottomLeftText={walletAddress ? 'x402 gated | $0.01 USDC/msg' : 'connect wallet to chat'}
         >
             <div style={styles.container}>
                 {/* Messages area */}
@@ -153,7 +241,7 @@ const PinionAgent: React.FC<PinionAgentProps> = (props) => {
                         <div style={Object.assign({}, styles.messageRow, styles.agentRow)}>
                             <span style={styles.agentLabel}>agent</span>
                             <span style={styles.typingIndicator}>
-                                thinking
+                                {paymentStatus || 'thinking'}
                                 <span className="typing-dots">...</span>
                             </span>
                         </div>
@@ -171,27 +259,37 @@ const PinionAgent: React.FC<PinionAgentProps> = (props) => {
 
                 {/* Input area */}
                 <div style={styles.inputArea}>
-                    <span style={styles.prompt}>{'>'}</span>
-                    <input
-                        ref={inputRef}
-                        type="text"
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        placeholder="ask me anything about pinion..."
-                        style={styles.input}
-                        disabled={isLoading}
-                    />
-                    <div
-                        onMouseDown={sendMessage}
-                        style={Object.assign(
-                            {},
-                            styles.sendButton,
-                            isLoading && styles.sendButtonDisabled
-                        )}
-                    >
-                        <span style={styles.sendText}>send</span>
-                    </div>
+                    {!walletAddress ? (
+                        <div style={styles.walletWarning}>
+                            <span style={styles.walletWarningText}>
+                                connect wallet to chat ($0.01 USDC/msg via x402)
+                            </span>
+                        </div>
+                    ) : (
+                        <>
+                            <span style={styles.prompt}>{'>'}</span>
+                            <input
+                                ref={inputRef}
+                                type="text"
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                onKeyDown={handleKeyDown}
+                                placeholder="ask me anything about pinion..."
+                                style={styles.input}
+                                disabled={isLoading}
+                            />
+                            <div
+                                onMouseDown={sendMessage}
+                                style={Object.assign(
+                                    {},
+                                    styles.sendButton,
+                                    isLoading && styles.sendButtonDisabled
+                                )}
+                            >
+                                <span style={styles.sendText}>send</span>
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
         </Window>
@@ -269,6 +367,18 @@ const styles: StyleSheetCSS = {
         padding: '8px 12px',
         alignItems: 'center',
         flexShrink: 0,
+    },
+    walletWarning: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: '4px 0',
+    },
+    walletWarningText: {
+        fontFamily: 'monospace',
+        fontSize: 11,
+        color: '#ffaa00',
+        textAlign: 'center',
     },
     prompt: {
         fontFamily: 'monospace',

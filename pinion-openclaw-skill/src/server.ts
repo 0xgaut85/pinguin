@@ -22,22 +22,22 @@ app.use(
     paymentMiddleware(
         payTo,
         {
-            'GET /balance/:address': {
-                price: '$0.001',
+            'GET /balance/[address]': {
+                price: '$0.01',
                 network: network,
                 config: {
                     description: 'Get ETH and USDC balances for any Base address',
                 },
             },
-            'GET /tx/:hash': {
-                price: '$0.001',
+            'GET /tx/[hash]': {
+                price: '$0.01',
                 network: network,
                 config: {
                     description: 'Get decoded transaction details for any Base transaction',
                 },
             },
-            'GET /price/:token': {
-                price: '$0.001',
+            'GET /price/[token]': {
+                price: '$0.01',
                 network: network,
                 config: {
                     description: 'Get current price for ETH or other Base tokens',

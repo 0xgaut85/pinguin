@@ -6,7 +6,7 @@ export function catalogRoute(payTo: string, network: string) {
             {
                 endpoint: '/balance/:address',
                 method: 'GET',
-                price: '$0.001',
+                price: '$0.01',
                 currency: 'USDC',
                 network,
                 description: 'Get ETH and USDC balances for any Base address',
@@ -15,7 +15,7 @@ export function catalogRoute(payTo: string, network: string) {
             {
                 endpoint: '/tx/:hash',
                 method: 'GET',
-                price: '$0.001',
+                price: '$0.01',
                 currency: 'USDC',
                 network,
                 description: 'Get decoded transaction details for any Base transaction hash',
@@ -24,7 +24,7 @@ export function catalogRoute(payTo: string, network: string) {
             {
                 endpoint: '/price/:token',
                 method: 'GET',
-                price: '$0.001',
+                price: '$0.01',
                 currency: 'USDC',
                 network,
                 description: 'Get current USD price for ETH or other tokens',

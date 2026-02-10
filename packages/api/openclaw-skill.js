@@ -27,22 +27,22 @@ const BASE_RPC = 'https://mainnet.base.org';
 // Follows the EXACT pattern from https://docs.payai.network/x402/servers/typescript/express
 // Only the routes listed here require payment. Others (like /catalog) pass through.
 const paywallRoutes = {
-    'GET /balance/:address': {
-        price: '$0.001',
+    'GET /balance/[address]': {
+        price: '$0.01',
         network: network,
         config: {
             description: 'Get ETH and USDC balances for any Base address',
         },
     },
-    'GET /tx/:hash': {
-        price: '$0.001',
+    'GET /tx/[hash]': {
+        price: '$0.01',
         network: network,
         config: {
             description: 'Get decoded transaction details for any Base transaction',
         },
     },
-    'GET /price/:token': {
-        price: '$0.001',
+    'GET /price/[token]': {
+        price: '$0.01',
         network: network,
         config: {
             description: 'Get current price for ETH or other Base tokens',
@@ -79,7 +79,7 @@ router.get('/catalog', (req, res) => {
         {
             endpoint: '/skill/balance/:address',
             method: 'GET',
-            price: '$0.001',
+            price: '$0.01',
             currency: 'USDC',
             network: network,
             description: 'Get ETH and USDC balances for any Base address',
@@ -88,7 +88,7 @@ router.get('/catalog', (req, res) => {
         {
             endpoint: '/skill/tx/:hash',
             method: 'GET',
-            price: '$0.001',
+            price: '$0.01',
             currency: 'USDC',
             network: network,
             description: 'Get decoded transaction details for any Base transaction hash',
@@ -97,7 +97,7 @@ router.get('/catalog', (req, res) => {
         {
             endpoint: '/skill/price/:token',
             method: 'GET',
-            price: '$0.001',
+            price: '$0.01',
             currency: 'USDC',
             network: network,
             description: 'Get current USD price for ETH or other tokens',

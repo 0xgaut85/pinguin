@@ -27,6 +27,35 @@ app.get('/os/*', (req, res) => {
     res.sendFile(path.join(__dirname, 'packages/inner-site/build', 'index.html'));
 });
 
+// ─── x402 Discovery Document ────────────────────────
+// https://github.com/Merit-Systems/x402scan/blob/main/docs/DISCOVERY.md
+app.get('/.well-known/x402', (req, res) => {
+    res.json({
+        version: 1,
+        resources: [
+            'https://pinionos.com/skill/balance/0x0000000000000000000000000000000000000001',
+            'https://pinionos.com/skill/tx/0x0000000000000000000000000000000000000000000000000000000000000001',
+            'https://pinionos.com/skill/price/ETH',
+            'https://pinionos.com/skill/wallet/generate',
+        ],
+        ownershipProofs: [
+            '0x981d16b1a52bd1099e58e0348fa9e48242ac8190b6dc1c3ebe6352b3db677b806ddad970547768609f40a9c9f81d7ba3e0c2b4fbbfbef77f8af280c072548dd31b',
+        ],
+        instructions:
+            '# Pinion OpenClaw Skills\n\n' +
+            'On-chain intelligence and wallet tools on Base, paywalled via x402 USDC micropayments ($0.01 each).\n\n' +
+            '## Endpoints\n' +
+            '- **Balance Lookup** - ETH + USDC balances for any Base address\n' +
+            '- **Transaction Details** - Decoded tx info for any Base tx hash\n' +
+            '- **Token Price** - Current USD price for ETH and other tokens\n' +
+            '- **Wallet Generation** - Generate a fresh Base keypair\n\n' +
+            '## Catalog\n' +
+            'Free catalog at https://pinionos.com/skill/catalog\n\n' +
+            '## More Info\n' +
+            'https://pinionos.com',
+    });
+});
+
 // Serve 3d-site at / (main entry)
 app.use(express.static(path.join(__dirname, 'packages/3d-site/public'), {
     index: 'index.html',

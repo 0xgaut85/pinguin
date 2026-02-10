@@ -25,8 +25,8 @@ const Developers: React.FC<DevelopersProps> = (props) => {
                     Pinion exposes on-chain intelligence and AI skills as
                     paywalled HTTP endpoints on <b>Base mainnet</b>.
                     Every call costs <b>$0.01 USDC</b> and is gated via
-                    the <b>x402</b> protocol — no API keys, no
-                    subscriptions, just a wallet signature per request.
+                    the <b>x402</b> protocol. No API keys, no
+                    subscriptions. Just a wallet signature per request.
                 </p>
                 <br />
                 <p>
@@ -86,7 +86,7 @@ const Developers: React.FC<DevelopersProps> = (props) => {
             <div style={styles.headerContainer}>
                 <div style={styles.header}>
                     <div style={styles.headerRow}>
-                        <h2>Server — x402-express</h2>
+                        <h2>Server: x402-express</h2>
                     </div>
                 </div>
             </div>
@@ -132,7 +132,7 @@ app.get('/balance/:address', async (req, res) => {
 
             {/* CLIENT EXAMPLE */}
             <div className="text-block">
-                <h2>Client — x402 Payment Flow</h2>
+                <h2>Client: x402 Payment Flow</h2>
                 <br />
                 <pre style={styles.codeBlock}>
 {`// 1. Make the initial request

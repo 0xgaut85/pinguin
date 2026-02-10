@@ -53,35 +53,35 @@ const Integrations: React.FC<IntegrationsProps> = (props) => {
     return (
         <div className="site-page-content">
             <h1>Integrations</h1>
-            <h3>Core Protocol Dependencies</h3>
+            <h3>What Pinion Runs On</h3>
             <br />
             <p>
-                Pinion is designed to integrate deeply with existing protocols
-                and standards. Each integration below represents a critical
-                component of the economic execution stack. Click on any to learn
-                more.
+                Pinion is built on top of real protocols that are live in
+                production today. OpenClaw defines how skills are packaged
+                and discovered. x402 handles payment at the HTTP layer.
+                ERC-8004 is next on the roadmap for on-chain agent identity.
             </p>
             <br />
             <div style={styles.integrationLinksContainer}>
                 <IntegrationBox
                     badge="EXECUTION"
                     title="OpenClaw"
-                    subtitle="AGENT RUNTIME"
-                    description="Skill-as-a-service execution environments for autonomous agents. Pinion enables payment-aware capability invocation within OpenClaw runtimes."
+                    subtitle="SKILL FORMAT"
+                    description="Our endpoints follow the OpenClaw skill spec. Each skill has a manifest, a price and a handler. The full catalog is browsable at /skill/catalog."
                     route="openclaw"
                 />
                 <IntegrationBox
                     badge="PAYMENT"
                     title="x402"
-                    subtitle="HTTP PAYMENT STANDARD"
-                    description="The HTTP 402 Payment Required protocol for machine-to-machine payments. Native value exchange embedded in every HTTP request."
+                    subtitle="HTTP 402 PAYMENTS"
+                    description="Every skill call is paywalled with x402-express middleware. Clients sign an EIP-3009 USDC transfer on Base and retry with the X-PAYMENT header. $0.01 per call."
                     route="x402"
                 />
                 <IntegrationBox
-                    badge="IDENTITY"
+                    badge="ROADMAP"
                     title="ERC-8004"
-                    subtitle="TRUST REGISTRY"
-                    description="Decentralized identity and trust scoring for autonomous agents. Verifiable credentials that machines can evaluate at runtime."
+                    subtitle="AGENT IDENTITY"
+                    description="On-chain identity and trust scoring for autonomous agents. Not yet in production. Planned to complement the existing x402 + OpenClaw stack."
                     route="erc8004"
                 />
             </div>

@@ -15,17 +15,17 @@ const X402Page: React.FC<X402PageProps> = (props) => {
                         </div>
                     </div>
                     <div style={styles.headerRow}>
-                        <h3>HTTP Payment Standard</h3>
+                        <h3>HTTP 402 Payments</h3>
                     </div>
                 </div>
             </div>
             <div className="text-block">
                 <p>
-                    The x402 protocol implements the long-dormant HTTP 402
-                    "Payment Required" status code as a machine-native payment
-                    negotiation standard. When a server responds with 402, it
-                    includes structured payment requirements that clients can
-                    fulfill automatically without human interaction.
+                    x402 uses the HTTP 402 status code to gate API endpoints
+                    behind on-chain payments. When a server responds with 402
+                    it includes structured payment requirements. The client
+                    signs a USDC transfer and retries with proof attached.
+                    No accounts, no API keys.
                 </p>
             </div>
 
@@ -39,40 +39,48 @@ const X402Page: React.FC<X402PageProps> = (props) => {
             </div>
             <div className="text-block">
                 <pre style={styles.codeBlock}>
-{`CLIENT                              SERVER
-  │                                    │
-  │──── GET /api/analyze ────────────▶│
-  │                                    │
-  │◀─── 402 Payment Required ────────│
-  │     x-payment-amount: 0.001 ETH    │
-  │     x-payment-address: 0xABC...    │
-  │     x-payment-network: base        │
-  │     x-payment-token: USDC          │
-  │                                    │
-  │──── GET /api/analyze ────────────▶│
-  │     x-payment-proof: 0xDEF...      │
-  │     x-payment-tx: 0x123...         │
-  │                                    │
-  │◀─── 200 OK ──────────────────────│
-  │     { result: "analysis data" }    │
-  │                                    │`}
+{`CLIENT                                SERVER
+  │                                      │
+  │── GET /skill/balance/0xABC... ─────▶│
+  │                                      │
+  │◀── 402 Payment Required ───────────│
+  │    {                                 │
+  │      "scheme": "exact",              │
+  │      "network": "base",              │
+  │      "maxAmountRequired": "10000",   │
+  │      "asset": "0x833589...USDC",     │
+  │      "payTo": "0x101C...0acf",       │
+  │      "maxTimeoutSeconds": 900        │
+  │    }                                 │
+  │                                      │
+  │  [wallet signs EIP-3009 transfer]    │
+  │                                      │
+  │── GET /skill/balance/0xABC... ─────▶│
+  │   X-PAYMENT: base64({               │
+  │     x402Version: 1,                  │
+  │     scheme: "exact",                 │
+  │     network: "base",                 │
+  │     payload: { signature, auth }     │
+  │   })                                 │
+  │                                      │
+  │◀── 200 OK ─────────────────────────│
+  │    { "eth": "0.042", "usdc": "12" }  │`}
                 </pre>
             </div>
 
-            {/* HOW PINION IMPLEMENTS x402 */}
+            {/* HOW IT WORKS */}
             <div style={styles.headerContainer}>
                 <div style={styles.header}>
                     <div style={styles.headerRow}>
-                        <h2>How Pinion Implements x402</h2>
+                        <h2>How Pinion Uses x402</h2>
                     </div>
                 </div>
             </div>
             <div className="text-block">
                 <p>
-                    Pinion uses x402 as the wire protocol for all payment
-                    negotiation within the economic execution flow. When a
-                    capability invocation requires payment, the interaction
-                    follows the standard HTTP 402 handshake:
+                    Every Pinion skill endpoint is protected by
+                    x402-express middleware. Here is the step-by-step flow
+                    for a real request.
                 </p>
                 <br />
                 <div style={styles.stepCard}>
@@ -82,10 +90,10 @@ const X402Page: React.FC<X402PageProps> = (props) => {
                     <div style={styles.stepContent}>
                         <h3>Initial Request</h3>
                         <p>
-                            The calling agent sends a capability request. If
-                            the capability requires payment, the server
-                            responds with HTTP 402 and structured payment
-                            headers.
+                            The client calls a skill endpoint with no payment.
+                            The middleware intercepts and returns HTTP 402 with
+                            a JSON body containing the payment requirements:
+                            amount, asset (USDC), network (Base) and payTo address.
                         </p>
                     </div>
                 </div>
@@ -94,12 +102,13 @@ const X402Page: React.FC<X402PageProps> = (props) => {
                         <h3>2</h3>
                     </div>
                     <div style={styles.stepContent}>
-                        <h3>Policy Evaluation</h3>
+                        <h3>Wallet Signature</h3>
                         <p>
-                            Pinion's policy engine evaluates the payment
-                            request against the agent's spending limits, trust
-                            requirements and budget constraints. Payment is
-                            authorized or rejected automatically.
+                            The client constructs an EIP-3009
+                            TransferWithAuthorization typed data object and
+                            signs it with eth_signTypedData_v4. This
+                            authorizes a $0.01 USDC transfer from the user
+                            to the payTo address on Base.
                         </p>
                     </div>
                 </div>
@@ -108,63 +117,103 @@ const X402Page: React.FC<X402PageProps> = (props) => {
                         <h3>3</h3>
                     </div>
                     <div style={styles.stepContent}>
-                        <h3>Payment & Execution</h3>
+                        <h3>Payment Verification</h3>
                         <p>
-                            Payment is submitted on-chain (or via payment
-                            channel). The proof is then included in a retry
-                            request. The server verifies payment and executes
-                            the capability.
+                            The client retries the same request with an
+                            X-PAYMENT header containing a base64-encoded
+                            JSON payload (signature + authorization params).
+                            The facilitator verifies and settles the payment
+                            on-chain then the server returns the skill result.
                         </p>
                     </div>
                 </div>
             </div>
 
-            {/* HEADER FORMAT */}
+            {/* X-PAYMENT HEADER */}
             <div style={styles.headerContainer}>
                 <div style={styles.header}>
                     <div style={styles.headerRow}>
-                        <h2>x402 Header Format</h2>
+                        <h2>X-PAYMENT Header Format</h2>
                     </div>
                 </div>
             </div>
             <div className="text-block">
                 <pre style={styles.codeBlock}>
-{`// x402 Response Headers (Server → Client)
-HTTP/1.1 402 Payment Required
-Content-Type: application/json
-X-Payment-Amount: 1000000          // Amount in smallest unit
-X-Payment-Currency: USDC           // Token symbol
-X-Payment-Network: base            // Chain / network
-X-Payment-Address: 0xABC...DEF    // Recipient address
-X-Payment-Expiry: 1738000000      // Unix timestamp
-X-Payment-Memo: cap:text-analysis  // Capability reference
+{`// The X-PAYMENT header is a base64-encoded JSON string:
+{
+  "x402Version": 1,
+  "scheme": "exact",
+  "network": "base",
+  "payload": {
+    "signature": "0xABC...DEF",
+    "authorization": {
+      "from": "0xUSER_ADDRESS",
+      "to": "0x101Cd32b...0acf",
+      "value": "10000",
+      "validAfter": "1738000000",
+      "validBefore": "1738000900",
+      "nonce": "0xRANDOM_32_BYTES"
+    }
+  }
+}
 
-// x402 Request Headers (Client → Server)
-GET /api/analyze HTTP/1.1
-X-Payment-Proof: 0xSIGNATURE...   // Payment signature
-X-Payment-TxHash: 0xHASH...       // On-chain tx hash
-X-Payment-Payer: 0xPAYER...       // Payer identity`}
+// Sent as:
+// X-PAYMENT: eyJ4NDAyVmVyc2lvbiI6MSwi...`}
                 </pre>
             </div>
 
-            {/* SUPPORTED NETWORKS */}
+            {/* SERVER SETUP */}
             <div style={styles.headerContainer}>
                 <div style={styles.header}>
                     <div style={styles.headerRow}>
-                        <h2>Supported Networks</h2>
+                        <h2>Server Setup</h2>
                     </div>
                 </div>
             </div>
             <div className="text-block">
-                <div style={styles.networkGrid}>
-                    <div style={styles.networkCard}>
-                        <h3>Base</h3>
-                        <p>Primary settlement layer. Low fees, fast finality.</p>
+                <p>
+                    On the server side, a single middleware call protects
+                    all routes. Bracket syntax marks dynamic segments.
+                </p>
+                <br />
+                <pre style={styles.codeBlock}>
+{`const { paymentMiddleware } = require('x402-express');
+
+app.use(
+  paymentMiddleware(
+    '0x101Cd32b...0acf',       // payTo
+    {
+      'GET /balance/[address]': {
+        price: '$0.01',
+        network: 'base',
+      },
+      'POST /chat': {
+        price: '$0.01',
+        network: 'base',
+      },
+    },
+    { url: 'https://x402.org/facilitator' },
+  )
+);`}
+                </pre>
+            </div>
+
+            {/* NETWORK */}
+            <div style={styles.headerContainer}>
+                <div style={styles.header}>
+                    <div style={styles.headerRow}>
+                        <h2>Network</h2>
                     </div>
-                    <div style={styles.networkCard}>
-                        <h3>Solana <span style={{ opacity: 0.5, fontSize: '0.8em' }}>(coming soon)</span></h3>
-                        <p>High-throughput micro-payment settlement.</p>
-                    </div>
+                </div>
+            </div>
+            <div className="text-block">
+                <div style={styles.networkCard}>
+                    <h3>Base Mainnet</h3>
+                    <p>
+                        All Pinion skills settle on Base (chain ID 8453).
+                        USDC contract: 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913.
+                        Low fees, fast finality.
+                    </p>
                 </div>
             </div>
             <ResumeDownload />
@@ -222,9 +271,6 @@ const styles: StyleSheetCSS = {
     stepContent: {
         flexDirection: 'column',
         flex: 1,
-    },
-    networkGrid: {
-        flexDirection: 'column',
     },
     networkCard: {
         padding: 12,

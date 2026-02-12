@@ -208,10 +208,17 @@ if (res.status === 402) {
                             <p>View live endpoint stats</p>
                         </div>
                     </a>
-                    <div style={styles.socialCard}>
-                        <h3>GitHub</h3>
-                        <p>Coming soon</p>
-                    </div>
+                    <a
+                        href="https://github.com/chu2bard/pinion-os"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={styles.socialLink}
+                    >
+                        <div style={styles.socialCard}>
+                            <h3>GitHub</h3>
+                            <p>Source code, SDK, and OpenClaw skill</p>
+                        </div>
+                    </a>
                 </div>
             </div>
             <ResumeDownload />

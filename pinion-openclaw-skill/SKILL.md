@@ -27,8 +27,8 @@ Every invocation = 1 real USDC transaction on Base.
 ## Quick Start
 
 ```bash
-git clone https://github.com/pinionprotocol/pinion-openclaw-skill.git
-cd pinion-openclaw-skill
+git clone https://github.com/chu2bard/pinion-os.git
+cd pinion-os
 npm install
 cp .env.example .env
 # Edit .env with your wallet address

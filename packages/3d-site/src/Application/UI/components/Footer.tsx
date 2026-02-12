@@ -29,7 +29,7 @@ const FOOTER_NAV: FooterNavItem[] = [
         children: [
             { label: 'Community', href: '#' },
             { label: 'Twitter/X', href: 'https://x.com/PinionOS' },
-            { label: 'GitHub', href: '#' },
+            { label: 'GitHub', href: 'https://github.com/chu2bard/pinion-os' },
         ],
     },
 ];
@@ -284,7 +284,7 @@ function renderNavColumns(
                             </a>
                         </li>
                         <li style={styles.subItem}>
-                            <a href="#" style={styles.subItemLink}>
+                            <a href="https://github.com/chu2bard/pinion-os" style={styles.subItemLink} target="_blank" rel="noopener noreferrer">
                                 GitHub
                             </a>
                         </li>

@@ -4,7 +4,7 @@
     "description": "On-chain intelligence for Base -- wallet balances, transaction lookups, and token prices. Paywalled via x402 USDC micropayments.",
     "author": "Pinion Protocol",
     "license": "MIT",
-    "homepage": "https://github.com/pinionprotocol/pinion-openclaw-skill",
+    "homepage": "https://github.com/chu2bard/pinion-os",
     "skills": [
         {
             "name": "balance",

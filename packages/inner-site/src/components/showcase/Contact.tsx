@@ -188,6 +188,83 @@ if (res.status === 402) {
                 </pre>
             </div>
 
+            {/* SDK & PLUGIN */}
+            <div style={styles.headerContainer}>
+                <div style={styles.header}>
+                    <div style={styles.headerRow}>
+                        <h2>Pinion OS SDK</h2>
+                    </div>
+                </div>
+            </div>
+            <div className="text-block">
+                <p>
+                    The <b>pinion-os</b> npm package handles x402 payment signing
+                    automatically. Instead of building the 402 flow yourself,
+                    install the SDK and call skill methods directly.
+                </p>
+                <br />
+                <pre style={styles.codeBlock}>
+{`npm install pinion-os`}
+                </pre>
+                <br />
+                <pre style={styles.codeBlock}>
+{`import { PinionClient } from 'pinion-os';
+
+const client = new PinionClient({
+  privateKey: process.env.PINION_PRIVATE_KEY,
+});
+
+// check ETH price ($0.01 USDC per call)
+const price = await client.skills.price('ETH');
+
+// send USDC to an address
+const tx = await client.skills.send(
+  '0xRecipient...', '10', 'USDC'
+);
+
+// swap tokens via 1inch
+const swap = await client.skills.trade(
+  'USDC', 'ETH', '50'
+);`}
+                </pre>
+            </div>
+
+            {/* CLAUDE CODE PLUGIN */}
+            <div style={styles.headerContainer}>
+                <div style={styles.header}>
+                    <div style={styles.headerRow}>
+                        <h2>Claude Code Plugin</h2>
+                    </div>
+                </div>
+            </div>
+            <div className="text-block">
+                <p>
+                    Pinion OS ships as a Claude Code plugin. Install it and
+                    your agent gets access to all eight skills as MCP tools.
+                </p>
+                <br />
+                <pre style={styles.codeBlock}>
+{`/plugin marketplace add chu2bard/pinion-os
+/plugin install pinion-os@pinion-os`}
+                </pre>
+                <br />
+                <p>
+                    No private key is needed upfront. On first use the agent
+                    calls <code style={styles.inlineCode}>pinion_setup</code> to
+                    either import an existing wallet or generate a fresh one.
+                    After setup, all ten tools are available: balance, tx, price,
+                    wallet, chat, send, trade, fund, pay_service, and spend_limit.
+                </p>
+                <br />
+                <p>
+                    The plugin can also be added via the MCP protocol directly:
+                </p>
+                <br />
+                <pre style={styles.codeBlock}>
+{`claude mcp add pinion -- npx pinion-os`}
+                </pre>
+            </div>
+
             {/* COMMUNITY */}
             <div style={styles.headerContainer}>
                 <div style={styles.header}>

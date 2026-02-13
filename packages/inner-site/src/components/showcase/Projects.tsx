@@ -78,6 +78,13 @@ const Integrations: React.FC<IntegrationsProps> = (props) => {
                     route="x402"
                 />
                 <IntegrationBox
+                    badge="SDK"
+                    title="Pinion OS"
+                    subtitle="NPM PACKAGE + CLAUDE PLUGIN"
+                    description="TypeScript SDK and Claude Code plugin. Handles x402 payment signing, wallet setup and all eight skills out of the box. Install via npm install pinion-os or /plugin marketplace add chu2bard/pinion-os."
+                    route="openclaw"
+                />
+                <IntegrationBox
                     badge="ROADMAP"
                     title="ERC-8004"
                     subtitle="AGENT IDENTITY"

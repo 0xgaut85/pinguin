@@ -38,7 +38,7 @@ const OpenClawPage: React.FC<OpenClawPageProps> = (props) => {
             </div>
             <div className="text-block">
                 <p>
-                    Five skills are live in production at{' '}
+                    Eight skills are live in production at{' '}
                     <b>pinionos.com/skill/</b>. Each costs $0.01 USDC on
                     Base mainnet via x402.
                 </p>
@@ -67,6 +67,21 @@ const OpenClawPage: React.FC<OpenClawPageProps> = (props) => {
                     <h3 style={styles.skillTitle}>AI Agent Chat</h3>
                     <code style={styles.skillEndpoint}>POST /skill/chat</code>
                     <p>Chat with the Pinion AI Agent. Send a messages array, get a response.</p>
+                </div>
+                <div style={styles.skillCard}>
+                    <h3 style={styles.skillTitle}>Send</h3>
+                    <code style={styles.skillEndpoint}>POST /skill/send</code>
+                    <p>Construct an unsigned ETH or USDC transfer transaction on Base. Client signs and broadcasts.</p>
+                </div>
+                <div style={styles.skillCard}>
+                    <h3 style={styles.skillTitle}>Trade</h3>
+                    <code style={styles.skillEndpoint}>POST /skill/trade</code>
+                    <p>Get an unsigned swap transaction via 1inch aggregator. Includes approval tx if needed.</p>
+                </div>
+                <div style={styles.skillCard}>
+                    <h3 style={styles.skillTitle}>Fund</h3>
+                    <code style={styles.skillEndpoint}>GET /skill/fund/:address</code>
+                    <p>Check wallet balances and get funding instructions for Base. ETH and USDC.</p>
                 </div>
             </div>
 
@@ -97,7 +112,13 @@ const OpenClawPage: React.FC<OpenClawPageProps> = (props) => {
       "network": "base",
       "description": "Get ETH and USDC balances for any Base address"
     },
-    ...
+    { "endpoint": "/skill/tx/:hash", ... },
+    { "endpoint": "/skill/price/:token", ... },
+    { "endpoint": "/skill/wallet/generate", ... },
+    { "endpoint": "/skill/chat", "method": "POST", ... },
+    { "endpoint": "/skill/send", "method": "POST", ... },
+    { "endpoint": "/skill/trade", "method": "POST", ... },
+    { "endpoint": "/skill/fund/:address", ... }
   ],
   "payTo": "0x101Cd32b9bEEE93845Ead7Bc604a5F1873330acf",
   "network": "base"
@@ -124,7 +145,7 @@ const OpenClawPage: React.FC<OpenClawPageProps> = (props) => {
 {`{
   "name": "pinion-openclaw-skill",
   "version": "1.0.0",
-  "description": "On-chain intelligence on Base via x402",
+  "description": "On-chain intelligence + transactions on Base via x402",
   "skills": [
     {
       "name": "balance-lookup",
@@ -134,9 +155,29 @@ const OpenClawPage: React.FC<OpenClawPageProps> = (props) => {
       "currency": "USDC",
       "network": "base"
     },
+    { "name": "tx-details", "endpoint": "/skill/tx/{hash}", ... },
+    { "name": "token-price", "endpoint": "/skill/price/{token}", ... },
+    { "name": "wallet-generate", "endpoint": "/skill/wallet/generate", ... },
+    { "name": "agent-chat", "endpoint": "/skill/chat", "method": "POST", ... },
     {
-      "name": "wallet-generate",
-      "endpoint": "/skill/wallet/generate",
+      "name": "send",
+      "endpoint": "/skill/send",
+      "method": "POST",
+      "price": "0.01",
+      "currency": "USDC",
+      "network": "base"
+    },
+    {
+      "name": "trade",
+      "endpoint": "/skill/trade",
+      "method": "POST",
+      "price": "0.01",
+      "currency": "USDC",
+      "network": "base"
+    },
+    {
+      "name": "fund",
+      "endpoint": "/skill/fund/{address}",
       "method": "GET",
       "price": "0.01",
       "currency": "USDC",

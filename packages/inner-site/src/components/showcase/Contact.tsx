@@ -71,6 +71,9 @@ const Developers: React.FC<DevelopersProps> = (props) => {
                         { path: '/skill/price/:token', method: 'GET', desc: 'Current USD price for ETH or other tokens' },
                         { path: '/skill/wallet/generate', method: 'GET', desc: 'Generate a fresh Base wallet keypair' },
                         { path: '/skill/chat', method: 'POST', desc: 'Chat with the Pinion AI Agent' },
+                        { path: '/skill/send', method: 'POST', desc: 'Construct unsigned ETH or USDC transfer tx' },
+                        { path: '/skill/trade', method: 'POST', desc: 'Unsigned swap tx via 1inch aggregator' },
+                        { path: '/skill/fund/:address', method: 'GET', desc: 'Wallet balance + funding instructions' },
                     ].map((ep, i) => (
                         <div key={i} style={i % 2 === 0 ? styles.endpointRow : styles.endpointRowAlt}>
                             <code style={{ ...styles.endpointCell, flex: 2.5, fontSize: 10, color: '#00ff88' }}>{ep.path}</code>
@@ -117,6 +120,14 @@ app.use(
         price: '$0.01', network,
         config: { description: 'Generate a Base keypair' },
       },
+      'POST /send': {
+        price: '$0.01', network,
+        config: { description: 'Construct unsigned transfer tx' },
+      },
+      'POST /trade': {
+        price: '$0.01', network,
+        config: { description: 'Unsigned swap via 1inch' },
+      },
     },
     { url: 'https://x402.org/facilitator' },
   )
@@ -126,6 +137,12 @@ app.get('/balance/:address', async (req, res) => {
   // x402 payment already verified at this point
   const balance = await getBalance(req.params.address);
   res.json(balance);
+});
+
+app.post('/send', async (req, res) => {
+  const { to, amount, token } = req.body;
+  const tx = constructTransfer(to, amount, token);
+  res.json({ tx }); // client signs + broadcasts
 });`}
                 </pre>
             </div>

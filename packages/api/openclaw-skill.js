@@ -27,6 +27,22 @@ const facilitatorUrl = process.env.FACILITATOR_URL || 'https://facilitator.payai
 const network = process.env.NETWORK || 'base';
 const BASE_RPC = 'https://mainnet.base.org';
 
+// ─── Token Constants ─────────────────────────────────
+const USDC_CONTRACT = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
+const WETH_CONTRACT = '0x4200000000000000000000000000000000000006';
+const ONEINCH_ROUTER = '0x111111125421ca6dc452d289314280a0f8842a65';
+const ONEINCH_BASE_URL = 'https://api.1inch.com/swap/v6.1/8453';
+const ONEINCH_API_KEY = process.env.ONEINCH_API_KEY || '';
+
+// well-known Base token addresses for the trade endpoint
+const TOKEN_ADDRESSES = {
+    ETH: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', // native ETH sentinel
+    USDC: USDC_CONTRACT,
+    WETH: WETH_CONTRACT,
+    DAI: '0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb',
+    CBETH: '0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22',
+};
+
 // ─── x402 Payment Middleware ─────────────────────────
 // Follows the EXACT pattern from https://docs.payai.network/x402/servers/typescript/express
 // Only the routes listed here require payment. Others (like /catalog) pass through.
@@ -64,6 +80,27 @@ const paywallRoutes = {
         network: network,
         config: {
             description: 'Chat with the Pinion AI agent ($0.01 per message)',
+        },
+    },
+    'POST /send': {
+        price: '$0.01',
+        network: network,
+        config: {
+            description: 'Construct an unsigned ETH or USDC transfer transaction on Base',
+        },
+    },
+    'POST /trade': {
+        price: '$0.01',
+        network: network,
+        config: {
+            description: 'Get an unsigned swap transaction via 1inch aggregator on Base',
+        },
+    },
+    'GET /fund/[address]': {
+        price: '$0.01',
+        network: network,
+        config: {
+            description: 'Get wallet balance and funding instructions for Base',
         },
     },
 };
@@ -132,6 +169,33 @@ router.get('/catalog', (req, res) => {
             description: 'Chat with the Pinion AI agent (x402-gated, $0.01 per message)',
             example: '/skill/chat',
         },
+        {
+            endpoint: '/skill/send',
+            method: 'POST',
+            price: '$0.01',
+            currency: 'USDC',
+            network: network,
+            description: 'Construct an unsigned ETH or USDC transfer transaction. Client signs and broadcasts.',
+            example: 'POST /skill/send { "to": "0x...", "amount": "0.1", "token": "ETH" }',
+        },
+        {
+            endpoint: '/skill/trade',
+            method: 'POST',
+            price: '$0.01',
+            currency: 'USDC',
+            network: network,
+            description: 'Get an unsigned swap transaction via 1inch aggregator. Client signs and broadcasts.',
+            example: 'POST /skill/trade { "src": "USDC", "dst": "ETH", "amount": "10", "from": "0x..." }',
+        },
+        {
+            endpoint: '/skill/fund/:address',
+            method: 'GET',
+            price: '$0.01',
+            currency: 'USDC',
+            network: network,
+            description: 'Get wallet balances and funding instructions for a Base address',
+            example: '/skill/fund/0x101Cd32b9bEEE93845Ead7Bc604a5F1873330acf',
+        },
     ];
     res.json({ skills, payTo, network });
 });
@@ -151,7 +215,6 @@ router.get('/balance/:address', async (req, res) => {
         const ethBalance = parseInt(ethBalanceHex, 16) / 1e18;
 
         // USDC balance (balanceOf call)
-        const USDC_CONTRACT = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
         const balanceOfSelector = '0x70a08231';
         const paddedAddress = address.substring(2).toLowerCase().padStart(64, '0');
         const usdcBalanceHex = await baseRpc('eth_call', [
@@ -407,6 +470,252 @@ router.post('/chat', async (req, res) => {
     } catch (error) {
         console.error('Anthropic API error:', error.message);
         res.status(500).json({ error: 'failed to get response from agent' });
+    }
+});
+
+// ─── Paid Endpoint: Send (Unsigned Tx Construction) ──
+// Accepts { to, amount, token } and returns an unsigned transaction object.
+// The client signs with their private key and broadcasts to Base.
+router.post('/send', async (req, res) => {
+    try {
+        const { to, amount, token } = req.body;
+
+        if (!to || !amount || !token) {
+            return res.status(400).json({ error: 'to, amount, and token are required' });
+        }
+        if (!/^0x[0-9a-fA-F]{40}$/.test(to)) {
+            return res.status(400).json({ error: 'Invalid recipient address' });
+        }
+        const parsedAmount = parseFloat(amount);
+        if (isNaN(parsedAmount) || parsedAmount <= 0) {
+            return res.status(400).json({ error: 'amount must be a positive number' });
+        }
+
+        const upperToken = token.toUpperCase();
+
+        if (upperToken === 'ETH') {
+            // native ETH transfer
+            const weiValue = BigInt(Math.floor(parsedAmount * 1e18));
+            res.json({
+                tx: {
+                    to,
+                    value: '0x' + weiValue.toString(16),
+                    data: '0x',
+                    chainId: 8453,
+                },
+                token: 'ETH',
+                amount: parsedAmount.toString(),
+                network: 'base',
+                note: 'Sign this transaction with your private key and broadcast to Base.',
+                timestamp: new Date().toISOString(),
+            });
+        } else if (upperToken === 'USDC') {
+            // ERC-20 transfer(address,uint256)
+            const atomicAmount = BigInt(Math.floor(parsedAmount * 1e6));
+            const transferSelector = '0xa9059cbb';
+            const paddedTo = to.substring(2).toLowerCase().padStart(64, '0');
+            const paddedAmount = atomicAmount.toString(16).padStart(64, '0');
+            const calldata = transferSelector + paddedTo + paddedAmount;
+
+            res.json({
+                tx: {
+                    to: USDC_CONTRACT,
+                    value: '0x0',
+                    data: calldata,
+                    chainId: 8453,
+                },
+                token: 'USDC',
+                amount: parsedAmount.toString(),
+                network: 'base',
+                note: 'Sign this transaction with your private key and broadcast to Base.',
+                timestamp: new Date().toISOString(),
+            });
+        } else {
+            return res.status(400).json({
+                error: `Unsupported token: ${token}. Use ETH or USDC.`,
+            });
+        }
+    } catch (err) {
+        console.error('Send construction error:', err.message);
+        res.status(500).json({ error: 'Failed to construct send transaction', details: err.message });
+    }
+});
+
+// ─── Paid Endpoint: Trade (1inch Swap via x402) ──────
+// Accepts { src, dst, amount, from, slippage? } and returns unsigned swap tx
+// from the 1inch aggregator. Also checks token allowance and returns
+// an approve tx if the router doesn't have sufficient approval.
+router.post('/trade', async (req, res) => {
+    try {
+        const { src, dst, amount, from, slippage } = req.body;
+
+        if (!src || !dst || !amount || !from) {
+            return res.status(400).json({ error: 'src, dst, amount, and from are required' });
+        }
+        if (!/^0x[0-9a-fA-F]{40}$/.test(from)) {
+            return res.status(400).json({ error: 'Invalid from address' });
+        }
+        if (!ONEINCH_API_KEY) {
+            return res.status(503).json({ error: 'Trade service is not configured (missing API key)' });
+        }
+
+        const srcUpper = src.toUpperCase();
+        const dstUpper = dst.toUpperCase();
+        const srcAddress = TOKEN_ADDRESSES[srcUpper];
+        const dstAddress = TOKEN_ADDRESSES[dstUpper];
+
+        if (!srcAddress) {
+            return res.status(400).json({
+                error: `Unsupported source token: ${src}`,
+                supported: Object.keys(TOKEN_ADDRESSES),
+            });
+        }
+        if (!dstAddress) {
+            return res.status(400).json({
+                error: `Unsupported destination token: ${dst}`,
+                supported: Object.keys(TOKEN_ADDRESSES),
+            });
+        }
+
+        // convert human-readable amount to atomic units
+        const decimals = srcUpper === 'USDC' ? 6 : 18;
+        const atomicAmount = BigInt(Math.floor(parseFloat(amount) * (10 ** decimals)));
+
+        const headers = {
+            Accept: 'application/json',
+            Authorization: `Bearer ${ONEINCH_API_KEY}`,
+        };
+
+        // check allowance if source is an ERC-20 (not native ETH)
+        let approveTx = null;
+        if (srcUpper !== 'ETH') {
+            const allowanceUrl = `${ONEINCH_BASE_URL}/approve/allowance?` +
+                `tokenAddress=${srcAddress}&walletAddress=${from}`;
+            const allowanceRes = await fetch(allowanceUrl, { headers });
+            if (!allowanceRes.ok) {
+                const body = await allowanceRes.text();
+                return res.status(502).json({ error: '1inch allowance check failed', details: body });
+            }
+            const allowanceData = await allowanceRes.json();
+            const currentAllowance = BigInt(allowanceData.allowance || '0');
+
+            if (currentAllowance < atomicAmount) {
+                // need approval -- get approve tx from 1inch
+                const approveUrl = `${ONEINCH_BASE_URL}/approve/transaction?` +
+                    `tokenAddress=${srcAddress}&amount=${atomicAmount.toString()}`;
+                const approveRes = await fetch(approveUrl, { headers });
+                if (!approveRes.ok) {
+                    const body = await approveRes.text();
+                    return res.status(502).json({ error: '1inch approve call failed', details: body });
+                }
+                const approveData = await approveRes.json();
+                approveTx = {
+                    to: approveData.to,
+                    data: approveData.data,
+                    value: '0x0',
+                    chainId: 8453,
+                };
+            }
+        }
+
+        // get swap tx from 1inch
+        const swapParams = new URLSearchParams({
+            src: srcAddress,
+            dst: dstAddress,
+            amount: atomicAmount.toString(),
+            from: from.toLowerCase(),
+            slippage: (slippage || 1).toString(),
+            disableEstimate: 'true',
+        });
+        const swapUrl = `${ONEINCH_BASE_URL}/swap?${swapParams.toString()}`;
+        const swapRes = await fetch(swapUrl, { headers });
+
+        if (!swapRes.ok) {
+            const body = await swapRes.text();
+            return res.status(502).json({ error: '1inch swap call failed', details: body });
+        }
+
+        const swapData = await swapRes.json();
+        const swapTx = {
+            to: swapData.tx.to,
+            data: swapData.tx.data,
+            value: '0x' + BigInt(swapData.tx.value || '0').toString(16),
+            chainId: 8453,
+        };
+
+        const result = {
+            swap: swapTx,
+            srcToken: srcUpper,
+            dstToken: dstUpper,
+            amount: amount,
+            network: 'base',
+            router: ONEINCH_ROUTER,
+            timestamp: new Date().toISOString(),
+        };
+
+        if (approveTx) {
+            result.approve = approveTx;
+            result.note = 'Sign and broadcast the approve tx first, wait for confirmation, then sign and broadcast the swap tx.';
+        } else {
+            result.note = 'Sign this swap transaction with your private key and broadcast to Base.';
+        }
+
+        res.json(result);
+    } catch (err) {
+        console.error('Trade error:', err.message);
+        res.status(500).json({ error: 'Failed to construct trade transaction', details: err.message });
+    }
+});
+
+// ─── Paid Endpoint: Fund (Balance + Deposit Info) ────
+router.get('/fund/:address', async (req, res) => {
+    try {
+        const { address } = req.params;
+
+        if (!/^0x[0-9a-fA-F]{40}$/.test(address)) {
+            return res.status(400).json({ error: 'Invalid Ethereum address' });
+        }
+
+        // ETH balance
+        const ethBalanceHex = await baseRpc('eth_getBalance', [address, 'latest']);
+        const ethBalance = parseInt(ethBalanceHex, 16) / 1e18;
+
+        // USDC balance
+        const balanceOfSelector = '0x70a08231';
+        const paddedAddress = address.substring(2).toLowerCase().padStart(64, '0');
+        const usdcBalanceHex = await baseRpc('eth_call', [
+            { to: USDC_CONTRACT, data: `${balanceOfSelector}${paddedAddress}` },
+            'latest',
+        ]);
+        const usdcBalance = parseInt(usdcBalanceHex, 16) / 1e6;
+
+        res.json({
+            address,
+            network: 'base',
+            chainId: 8453,
+            balances: {
+                ETH: ethBalance.toFixed(6),
+                USDC: usdcBalance.toFixed(2),
+            },
+            depositAddress: address,
+            funding: {
+                steps: [
+                    'Buy ETH on any exchange (Coinbase, Binance, etc.)',
+                    'Withdraw ETH to the address above on the Base network',
+                    'Swap some ETH to USDC using the /trade skill or any DEX',
+                    'ETH is needed for gas, USDC is needed for x402 payments',
+                ],
+                minimumRecommended: {
+                    ETH: '0.001 ETH (for gas fees)',
+                    USDC: '1.00 USDC (for ~100 skill calls at $0.01 each)',
+                },
+                bridgeUrl: 'https://bridge.base.org',
+            },
+            timestamp: new Date().toISOString(),
+        });
+    } catch (err) {
+        console.error('Fund info error:', err.message);
+        res.status(500).json({ error: 'Failed to fetch fund info', details: err.message });
     }
 });
 

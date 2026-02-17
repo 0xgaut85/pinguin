@@ -103,6 +103,13 @@ const paywallRoutes = {
             description: 'Get wallet balance and funding instructions for Base',
         },
     },
+    'POST /broadcast': {
+        price: '$0.01',
+        network: network,
+        config: {
+            description: 'Sign and broadcast a transaction on Base',
+        },
+    },
 };
 
 router.use(
@@ -196,6 +203,15 @@ router.get('/catalog', (req, res) => {
             description: 'Get wallet balances and funding instructions for a Base address',
             example: '/skill/fund/0x101Cd32b9bEEE93845Ead7Bc604a5F1873330acf',
         },
+        {
+            endpoint: '/skill/broadcast',
+            method: 'POST',
+            price: '$0.01',
+            currency: 'USDC',
+            network: network,
+            description: 'Sign and broadcast a transaction on Base. Provide unsigned tx and private key.',
+            example: 'POST /skill/broadcast { "tx": { "to": "0x...", "data": "0x...", "value": "0x0" }, "privateKey": "0x..." }',
+        },
     ];
     res.json({ skills, payTo, network });
 });
@@ -271,45 +287,107 @@ router.get('/tx/:hash', async (req, res) => {
     }
 });
 
+// ─── Price: Birdeye config ──────────────────────────
+const BIRDEYE_API = 'https://public-api.birdeye.so';
+const BIRDEYE_KEY = process.env.BIRDEYE_API_KEY || '';
+
+// Base mainnet contract addresses (checksum format for Birdeye)
+const PRICE_TOKEN_ADDRESSES = {
+    ETH: '0x4200000000000000000000000000000000000006',   // WETH on Base
+    WETH: '0x4200000000000000000000000000000000000006',
+    USDC: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+    USDT: '0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2',
+    DAI: '0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb',
+    CBETH: '0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22',
+};
+
+const GECKO_MAP = {
+    ETH: 'ethereum',
+    USDC: 'usd-coin',
+    WETH: 'weth',
+    CBETH: 'coinbase-wrapped-staked-eth',
+    DAI: 'dai',
+    USDT: 'tether',
+};
+
+async function fetchBirdeyePrice(address) {
+    if (!BIRDEYE_KEY) return null;
+    try {
+        const res = await fetch(`${BIRDEYE_API}/defi/price?address=${address}&include_liquidity=true`, {
+            headers: { 'X-API-KEY': BIRDEYE_KEY, 'x-chain': 'base' },
+        });
+        if (!res.ok) return null;
+        const json = await res.json();
+        if (!json.success || !json.data) return null;
+        return {
+            priceUSD: json.data.value,
+            change24h: json.data.priceChange24h != null ? json.data.priceChange24h.toFixed(2) + '%' : null,
+            liquidity: json.data.liquidity ?? null,
+        };
+    } catch { return null; }
+}
+
+async function fetchCoinGeckoPrice(geckoId) {
+    try {
+        const res = await fetch(
+            `https://api.coingecko.com/api/v3/simple/price?ids=${geckoId}&vs_currencies=usd&include_24hr_change=true`
+        );
+        const data = await res.json();
+        if (!data[geckoId]) return null;
+        return {
+            priceUSD: data[geckoId].usd,
+            change24h: data[geckoId].usd_24h_change ? data[geckoId].usd_24h_change.toFixed(2) + '%' : null,
+        };
+    } catch { return null; }
+}
+
 // ─── Paid Endpoint: Price Lookup ─────────────────────
 router.get('/price/:token', async (req, res) => {
     try {
-        const token = req.params.token.toUpperCase();
+        const tokenInput = req.params.token;
+        const token = tokenInput.toUpperCase();
 
-        // Use CoinGecko free API for prices
-        const tokenMap = {
-            ETH: 'ethereum',
-            USDC: 'usd-coin',
-            WETH: 'weth',
-            CBETH: 'coinbase-wrapped-staked-eth',
-            DAI: 'dai',
-            USDT: 'tether',
-        };
+        const isAddress = /^0x[0-9a-fA-F]{40}$/i.test(tokenInput);
+        const address = isAddress ? tokenInput : PRICE_TOKEN_ADDRESSES[token];
 
-        const geckoId = tokenMap[token];
-        if (!geckoId) {
+        if (!address) {
             return res.status(400).json({
                 error: `Unsupported token: ${token}`,
-                supported: Object.keys(tokenMap),
+                supported: [...Object.keys(PRICE_TOKEN_ADDRESSES), 'or any Base contract address (0x...)'],
             });
         }
 
-        const priceRes = await fetch(
-            `https://api.coingecko.com/api/v3/simple/price?ids=${geckoId}&vs_currencies=usd&include_24hr_change=true`
-        );
-        const priceData = await priceRes.json();
+        // Try Birdeye first
+        const birdeyeResult = await fetchBirdeyePrice(address);
+        if (birdeyeResult) {
+            return res.json({
+                token: isAddress ? tokenInput : token,
+                network: 'base',
+                priceUSD: birdeyeResult.priceUSD,
+                change24h: birdeyeResult.change24h,
+                liquidity: birdeyeResult.liquidity,
+                source: 'birdeye',
+                timestamp: new Date().toISOString(),
+            });
+        }
 
-        if (!priceData[geckoId]) {
+        // Fallback to CoinGecko for known symbols
+        const geckoId = GECKO_MAP[token];
+        if (!geckoId) {
+            return res.status(502).json({ error: 'Price data unavailable (Birdeye unreachable and token not in CoinGecko fallback)' });
+        }
+
+        const geckoResult = await fetchCoinGeckoPrice(geckoId);
+        if (!geckoResult) {
             return res.status(502).json({ error: 'Price data unavailable' });
         }
 
         res.json({
             token,
             network: 'base',
-            priceUSD: priceData[geckoId].usd,
-            change24h: priceData[geckoId].usd_24h_change
-                ? priceData[geckoId].usd_24h_change.toFixed(2) + '%'
-                : null,
+            priceUSD: geckoResult.priceUSD,
+            change24h: geckoResult.change24h,
+            source: 'coingecko',
             timestamp: new Date().toISOString(),
         });
     } catch (err) {
@@ -716,6 +794,57 @@ router.get('/fund/:address', async (req, res) => {
     } catch (err) {
         console.error('Fund info error:', err.message);
         res.status(500).json({ error: 'Failed to fetch fund info', details: err.message });
+    }
+});
+
+// ─── Paid Endpoint: Sign & Broadcast ────────────────
+router.post('/broadcast', async (req, res) => {
+    try {
+        const { ethers } = require('ethers');
+        const { tx, privateKey } = req.body;
+
+        if (!tx || !privateKey) {
+            return res.status(400).json({ error: 'tx (unsigned transaction object) and privateKey are required' });
+        }
+        if (typeof privateKey !== 'string' || !privateKey.startsWith('0x') || privateKey.length !== 66) {
+            return res.status(400).json({ error: 'privateKey must be a 66-character hex string starting with 0x' });
+        }
+
+        const provider = new ethers.JsonRpcProvider(BASE_RPC, 8453);
+        const wallet = new ethers.Wallet(privateKey, provider);
+
+        const txRequest = {
+            to: tx.to,
+            data: tx.data || '0x',
+            value: tx.value || '0x0',
+            chainId: 8453,
+        };
+
+        if (tx.gasLimit) txRequest.gasLimit = tx.gasLimit;
+        if (tx.maxFeePerGas) txRequest.maxFeePerGas = tx.maxFeePerGas;
+        if (tx.maxPriorityFeePerGas) txRequest.maxPriorityFeePerGas = tx.maxPriorityFeePerGas;
+
+        const sentTx = await wallet.sendTransaction(txRequest);
+
+        res.json({
+            txHash: sentTx.hash,
+            from: wallet.address,
+            to: txRequest.to,
+            network: 'base',
+            chainId: 8453,
+            explorer: `https://basescan.org/tx/${sentTx.hash}`,
+            note: 'Transaction broadcast successfully. Check explorer for confirmation.',
+            timestamp: new Date().toISOString(),
+        });
+    } catch (err) {
+        console.error('Broadcast error:', err.message);
+        if (err.code === 'INSUFFICIENT_FUNDS') {
+            return res.status(400).json({ error: 'Insufficient funds for gas', details: err.message });
+        }
+        if (err.code === 'INVALID_ARGUMENT') {
+            return res.status(400).json({ error: 'Invalid transaction or key', details: err.message });
+        }
+        res.status(500).json({ error: 'Failed to sign and broadcast transaction', details: err.message });
     }
 });
 

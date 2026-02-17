@@ -41,6 +41,7 @@ app.get('/.well-known/x402', (req, res) => {
             'https://pinionos.com/skill/send',
             'https://pinionos.com/skill/trade',
             'https://pinionos.com/skill/fund/0x0000000000000000000000000000000000000001',
+            'https://pinionos.com/skill/broadcast',
         ],
         ownershipProofs: [
             '0x981d16b1a52bd1099e58e0348fa9e48242ac8190b6dc1c3ebe6352b3db677b806ddad970547768609f40a9c9f81d7ba3e0c2b4fbbfbef77f8af280c072548dd31b',
@@ -56,7 +57,8 @@ app.get('/.well-known/x402', (req, res) => {
             '- **AI Chat** - Chat with the Pinion Agent ($0.01/message)\n' +
             '- **Send** - Construct unsigned ETH or USDC transfer tx\n' +
             '- **Trade** - Unsigned swap tx via 1inch aggregator\n' +
-            '- **Fund** - Wallet balance and funding instructions\n\n' +
+            '- **Fund** - Wallet balance and funding instructions\n' +
+            '- **Broadcast** - Sign and broadcast a transaction on Base\n\n' +
             '## SDK\n' +
             'npm install pinion-os -- TypeScript SDK with x402 payment signing built in.\n' +
             'Claude Code plugin: /plugin marketplace add chu2bard/pinion-os\n\n' +

@@ -6,8 +6,10 @@ import { txRoute } from './routes/tx';
 import { priceRoute } from './routes/price';
 import { walletRoute } from './routes/wallet';
 import { catalogRoute } from './routes/catalog';
+import { broadcastRoute } from './routes/broadcast';
 
 const app = express();
+app.use(express.json());
 const PORT = process.env.PORT || 4020;
 
 // ─── Config ──────────────────────────────────────────
@@ -50,6 +52,13 @@ app.use(
                     description: 'Generate a fresh Ethereum keypair for Base',
                 },
             },
+            'POST /broadcast': {
+                price: '$0.01',
+                network: network,
+                config: {
+                    description: 'Sign and broadcast a transaction on Base',
+                },
+            },
         },
         { url: facilitatorUrl },
     ),
@@ -61,6 +70,7 @@ app.get('/balance/:address', balanceRoute);
 app.get('/tx/:hash', txRoute);
 app.get('/price/:token', priceRoute);
 app.get('/wallet/generate', walletRoute);
+app.post('/broadcast', broadcastRoute);
 
 // ─── Start ───────────────────────────────────────────
 app.listen(PORT, () => {

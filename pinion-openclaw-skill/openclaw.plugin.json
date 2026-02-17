@@ -1,89 +1,47 @@
 {
-    "name": "pinion-chain-intel",
+    "id": "pinion-chain-intel",
+    "name": "Pinion Chain Intel",
     "version": "1.0.0",
-    "description": "On-chain intelligence for Base -- wallet balances, transaction lookups, and token prices. Paywalled via x402 USDC micropayments.",
+    "description": "On-chain intelligence, transactions and wallet tools on Base. 9 skills paywalled via x402 USDC micropayments ($0.01 each).",
     "author": "Pinion Protocol",
     "license": "MIT",
-    "homepage": "https://github.com/chu2bard/pinion-os",
-    "skills": [
-        {
-            "name": "balance",
-            "description": "Get ETH and USDC balances for any Base address",
-            "endpoint": "/balance/:address",
-            "method": "GET",
-            "price": "$0.01",
-            "currency": "USDC",
-            "network": "base",
-            "inputSchema": {
-                "type": "object",
-                "properties": {
-                    "address": {
-                        "type": "string",
-                        "description": "Ethereum address (0x...)",
-                        "pattern": "^0x[0-9a-fA-F]{40}$"
-                    }
-                },
-                "required": ["address"]
-            }
-        },
-        {
-            "name": "tx",
-            "description": "Get decoded transaction details for any Base transaction",
-            "endpoint": "/tx/:hash",
-            "method": "GET",
-            "price": "$0.01",
-            "currency": "USDC",
-            "network": "base",
-            "inputSchema": {
-                "type": "object",
-                "properties": {
-                    "hash": {
-                        "type": "string",
-                        "description": "Transaction hash (0x...)",
-                        "pattern": "^0x[0-9a-fA-F]{64}$"
-                    }
-                },
-                "required": ["hash"]
-            }
-        },
-        {
-            "name": "price",
-            "description": "Get current USD price for ETH or other Base tokens",
-            "endpoint": "/price/:token",
-            "method": "GET",
-            "price": "$0.01",
-            "currency": "USDC",
-            "network": "base",
-            "inputSchema": {
-                "type": "object",
-                "properties": {
-                    "token": {
-                        "type": "string",
-                        "description": "Token symbol (ETH, USDC, WETH, DAI, USDT, CBETH)",
-                        "enum": ["ETH", "USDC", "WETH", "DAI", "USDT", "CBETH"]
-                    }
-                },
-                "required": ["token"]
-            }
-        },
-        {
-            "name": "wallet",
-            "description": "Generate a fresh Base wallet keypair for your OpenClaw agent",
-            "endpoint": "/wallet/generate",
-            "method": "GET",
-            "price": "$0.01",
-            "currency": "USDC",
-            "network": "base",
-            "inputSchema": {
-                "type": "object",
-                "properties": {},
-                "required": []
+    "homepage": "https://pinionos.com",
+    "configSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+            "baseUrl": {
+                "type": "string",
+                "description": "Base URL for the Pinion skill server",
+                "default": "https://pinionos.com/skill"
+            },
+            "network": {
+                "type": "string",
+                "description": "Network for x402 payments",
+                "default": "base"
             }
         }
+    },
+    "uiHints": {
+        "baseUrl": { "label": "Skill Server URL", "placeholder": "https://pinionos.com/skill" },
+        "network": { "label": "Network", "placeholder": "base" }
+    },
+    "skills": [
+        "skills/balance",
+        "skills/tx",
+        "skills/price",
+        "skills/wallet",
+        "skills/chat",
+        "skills/send",
+        "skills/trade",
+        "skills/fund",
+        "skills/broadcast"
     ],
     "x402": {
         "facilitator": "https://facilitator.payai.network",
         "network": "base",
-        "paymentToken": "USDC"
+        "paymentToken": "USDC",
+        "pricePerCall": "$0.01",
+        "payTo": "0x101Cd32b9bEEE93845Ead7Bc604a5F1873330acf"
     }
 }

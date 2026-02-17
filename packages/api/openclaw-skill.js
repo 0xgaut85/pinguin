@@ -341,6 +341,38 @@ async function fetchCoinGeckoPrice(geckoId) {
     } catch { return null; }
 }
 
+async function searchBirdeyeToken(keyword) {
+    if (!BIRDEYE_KEY) return null;
+    try {
+        const params = new URLSearchParams({
+            chain: 'base',
+            keyword: keyword,
+            target: 'token',
+            sort_by: 'liquidity',
+            sort_type: 'desc',
+            limit: '1',
+        });
+        const res = await fetch(`${BIRDEYE_API}/defi/v3/search?${params}`, {
+            headers: { 'X-API-KEY': BIRDEYE_KEY, 'x-chain': 'base' },
+        });
+        if (!res.ok) return null;
+        const json = await res.json();
+        if (!json.success || !json.data?.items) return null;
+        const tokenResults = json.data.items.find(i => i.type === 'token');
+        if (!tokenResults?.result?.length) return null;
+        const top = tokenResults.result[0];
+        return {
+            address: top.address,
+            name: top.name,
+            symbol: top.symbol,
+            priceUSD: top.price,
+            change24h: top.price_change_24h_percent != null
+                ? top.price_change_24h_percent.toFixed(2) + '%' : null,
+            liquidity: top.liquidity ?? null,
+        };
+    } catch { return null; }
+}
+
 // ─── Paid Endpoint: Price Lookup ─────────────────────
 router.get('/price/:token', async (req, res) => {
     try {
@@ -351,9 +383,23 @@ router.get('/price/:token', async (req, res) => {
         const address = isAddress ? tokenInput : PRICE_TOKEN_ADDRESSES[token];
 
         if (!address) {
-            return res.status(400).json({
-                error: `Unsupported token: ${token}`,
-                supported: [...Object.keys(PRICE_TOKEN_ADDRESSES), 'or any Base contract address (0x...)'],
+            const searched = await searchBirdeyeToken(tokenInput);
+            if (searched) {
+                return res.json({
+                    token: searched.symbol || tokenInput,
+                    name: searched.name,
+                    address: searched.address,
+                    network: 'base',
+                    priceUSD: searched.priceUSD,
+                    change24h: searched.change24h,
+                    liquidity: searched.liquidity,
+                    source: 'birdeye-search',
+                    timestamp: new Date().toISOString(),
+                });
+            }
+            return res.status(404).json({
+                error: `Token not found: ${tokenInput}`,
+                hint: 'Try a Base contract address (0x...) or a different symbol',
             });
         }
 

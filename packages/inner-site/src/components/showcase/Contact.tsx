@@ -245,7 +245,7 @@ const swap = await client.skills.trade(
                 <br />
                 <pre style={styles.codeBlock}>
 {`/plugin marketplace add chu2bard/pinion-os
-/plugin install pinion-os@pinion-os`}
+/plugin install pinion-os`}
                 </pre>
                 <br />
                 <p>

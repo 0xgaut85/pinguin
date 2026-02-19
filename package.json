@@ -2,6 +2,9 @@
     "name": "pinion",
     "version": "1.0.0",
     "private": true,
+    "engines": {
+        "node": ">=20"
+    },
     "workspaces": [
         "packages/3d-site",
         "packages/inner-site",

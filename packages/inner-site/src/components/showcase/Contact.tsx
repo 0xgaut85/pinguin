@@ -265,6 +265,38 @@ const swap = await client.skills.trade(
                 </pre>
             </div>
 
+            {/* STRIPE x402 */}
+            <div style={styles.headerContainer}>
+                <div style={styles.header}>
+                    <div style={styles.headerRow}>
+                        <h2>Stripe x402 — Pay Web2 with Crypto</h2>
+                    </div>
+                </div>
+            </div>
+            <div className="text-block">
+                <p>
+                    Your Pinion agent can pay any web2 service that uses{" "}
+                    <a href="https://docs.stripe.com/payments/machine/x402" style={styles.link}>
+                        Stripe x402
+                    </a>{" "}
+                    for machine payments. The SDK auto-detects v1 and v2 x402
+                    transport — no config needed.
+                </p>
+                <br />
+                <pre style={styles.codeBlock}>
+{`const result = await payX402Service(
+  pinion.signer,
+  "https://api.example.com/paid-endpoint",
+  { method: "GET", maxAmount: "100000" }
+);`}
+                </pre>
+                <br />
+                <p>
+                    The agent pays USDC on Base. Stripe handles settlement on the
+                    server side. No Stripe account needed on the agent side.
+                </p>
+            </div>
+
             {/* COMMUNITY */}
             <div style={styles.headerContainer}>
                 <div style={styles.header}>

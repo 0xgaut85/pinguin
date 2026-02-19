@@ -23,8 +23,13 @@ router.use((req, res, next) => {
 
 // ─── Config ──────────────────────────────────────────
 const payTo = process.env.ADDRESS || '0x101Cd32b9bEEE93845Ead7Bc604a5F1873330acf';
-const facilitatorUrl = process.env.FACILITATOR_URL || 'https://facilitator.payai.network';
 const network = process.env.NETWORK || 'base';
+
+// PayAI facilitator with JWT auth (reads PAYAI_API_KEY_ID & PAYAI_API_KEY_SECRET from env)
+const { createFacilitatorConfig } = require('@payai/facilitator');
+const facilitatorConfig = process.env.PAYAI_API_KEY_ID
+    ? createFacilitatorConfig(process.env.PAYAI_API_KEY_ID, process.env.PAYAI_API_KEY_SECRET)
+    : { url: process.env.FACILITATOR_URL || 'https://facilitator.payai.network' };
 const BASE_RPC = 'https://mainnet.base.org';
 
 // ─── Token Constants ─────────────────────────────────
@@ -113,7 +118,7 @@ const paywallRoutes = {
 };
 
 router.use(
-    paymentMiddleware(payTo, paywallRoutes, { url: facilitatorUrl })
+    paymentMiddleware(payTo, paywallRoutes, facilitatorConfig)
 );
 
 // ─── Helper: call Base RPC ───────────────────────────

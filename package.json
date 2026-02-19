@@ -8,6 +8,9 @@
         "packages/api"
     ],
     "scripts": {
+        "sequence": "node scripts/sequence/sequence_runner.js",
+        "sequence:test": "node scripts/sequence/sequence_runner.js --max-sequences 1",
+        "sequence:headed": "node scripts/sequence/sequence_runner.js --headed",
         "dev:3d": "npm run dev --workspace=packages/3d-site",
         "dev:inner": "npm run start --workspace=packages/inner-site",
         "dev:api": "npm run dev --workspace=packages/api",

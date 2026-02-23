@@ -134,9 +134,11 @@ const OpenClawGateway: React.FC<OpenClawGatewayProps> = (props) => {
             // Step 1: Call the endpoint (will get 402)
             const endpoint = skill.endpoint.replace(/:address|:hash|:token/, paramValue);
             const url = `${getApiBase()}${endpoint}`;
+            const method = skill.method || 'GET';
 
             const initialRes = await fetch(url, {
-                headers: { 'Accept': 'application/json' },
+                method,
+                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
             });
 
             if (initialRes.status !== 402) {
@@ -176,8 +178,10 @@ const OpenClawGateway: React.FC<OpenClawGatewayProps> = (props) => {
 
             // Step 4: Retry with X-PAYMENT header
             const paidRes = await fetch(url, {
+                method,
                 headers: {
                     'Accept': 'application/json',
+                    'Content-Type': 'application/json',
                     'X-PAYMENT': paymentHeader,
                     'Access-Control-Expose-Headers': 'X-PAYMENT-RESPONSE',
                 },

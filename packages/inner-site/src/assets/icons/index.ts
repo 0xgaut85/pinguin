@@ -27,6 +27,7 @@ import openclawIcon from './openclawIcon.png';
 import windowOpenclawIcon from './windowOpenclawIcon.png';
 import serverIcon from './serverIcon.png';
 import windowServerIcon from './windowServerIcon.png';
+import pinionTokenIcon from './pinionTokenIcon.png';
 
 const icons = {
     windowResize: windowResize,
@@ -56,6 +57,7 @@ const icons = {
     windowOpenclawIcon: windowOpenclawIcon,
     serverIcon: serverIcon,
     windowServerIcon: windowServerIcon,
+    pinionTokenIcon: pinionTokenIcon,
 };
 
 export type IconName = keyof typeof icons;

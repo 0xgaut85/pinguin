@@ -12,6 +12,7 @@ import PinionAgent from '../applications/PinionAgent';
 import ConnectWallet from '../applications/ConnectWallet';
 import OpenClawGateway from '../applications/OpenClawGateway';
 import ServerViewer from '../applications/ServerViewer';
+import PinionToken from '../applications/PinionToken';
 
 export interface DesktopProps {}
 
@@ -66,6 +67,12 @@ const APPLICATIONS: {
         name: 'Credits',
         shortcutIcon: 'credits',
         component: Credits,
+    },
+    pinionToken: {
+        key: 'pinionToken',
+        name: '$Pinion',
+        shortcutIcon: 'pinionTokenIcon',
+        component: PinionToken,
     },
 };
 

@@ -3,8 +3,37 @@ require('dotenv').config();
 const express = require('express');
 const { paymentMiddleware } = require('x402-express');
 const Anthropic = require('@anthropic-ai/sdk');
+const { Redis } = require('@upstash/redis');
+const crypto = require('crypto');
 
 const router = express.Router();
+
+// ─── Upstash Redis (unlimited whitelist) ────────────
+const redis = process.env.UPSTASH_REDIS_REST_URL
+    ? new Redis({
+          url: process.env.UPSTASH_REDIS_REST_URL,
+          token: process.env.UPSTASH_REDIS_REST_TOKEN,
+      })
+    : null;
+
+async function getKeyData(apiKey) {
+    if (!redis) return null;
+    const data = await redis.get(`pinion:key:${apiKey}`);
+    return data || null;
+}
+
+async function getKeyByAddress(address) {
+    if (!redis) return null;
+    const key = await redis.get(`pinion:addr:${address.toLowerCase()}`);
+    return key || null;
+}
+
+async function storeKey(apiKey, address) {
+    if (!redis) return;
+    const entry = { address: address.toLowerCase(), createdAt: new Date().toISOString() };
+    await redis.set(`pinion:key:${apiKey}`, JSON.stringify(entry));
+    await redis.set(`pinion:addr:${address.toLowerCase()}`, apiKey);
+}
 
 // Parse JSON bodies (needed for POST /chat)
 router.use(express.json());
@@ -13,7 +42,7 @@ router.use(express.json());
 router.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, X-PAYMENT, Accept');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, X-PAYMENT, X-API-KEY, Accept');
     res.header('Access-Control-Expose-Headers', 'X-PAYMENT-RESPONSE');
     if (req.method === 'OPTIONS') {
         return res.sendStatus(204);
@@ -115,11 +144,35 @@ const paywallRoutes = {
             description: 'Sign and broadcast a transaction on Base',
         },
     },
+    'POST /unlimited': {
+        price: '$100.00',
+        network: network,
+        config: {
+            description: 'One-time $100 payment for unlimited access to all Pinion OS skills',
+        },
+    },
 };
 
-router.use(
-    paymentMiddleware(payTo, paywallRoutes, facilitatorConfig)
-);
+// ─── API Key Bypass Middleware ───────────────────────
+// If a valid unlimited API key is present, skip x402.
+router.use(async (req, res, next) => {
+    const apiKey = req.headers['x-api-key'];
+    if (apiKey && redis) {
+        const data = await getKeyData(apiKey);
+        if (data) {
+            req.unlimitedAccess = true;
+            req.unlimitedAddress = typeof data === 'string' ? JSON.parse(data).address : data.address;
+        }
+    }
+    next();
+});
+
+// ─── Conditional x402 Middleware ─────────────────────
+const x402 = paymentMiddleware(payTo, paywallRoutes, facilitatorConfig);
+router.use((req, res, next) => {
+    if (req.unlimitedAccess) return next();
+    x402(req, res, next);
+});
 
 // ─── Helper: call Base RPC ───────────────────────────
 async function baseRpc(method, params = []) {
@@ -132,6 +185,76 @@ async function baseRpc(method, params = []) {
     if (json.error) throw new Error(json.error.message);
     return json.result;
 }
+
+// ─── Paid Endpoint: Unlimited Access ─────────────────
+router.post('/unlimited', async (req, res) => {
+    try {
+        if (req.unlimitedAccess) {
+            return res.json({
+                message: 'You already have unlimited access',
+                address: req.unlimitedAddress,
+                plan: 'unlimited',
+            });
+        }
+
+        const xPayment = req.headers['x-payment'];
+        if (!xPayment) {
+            return res.status(400).json({ error: 'Missing X-PAYMENT header' });
+        }
+
+        let payerAddress;
+        try {
+            const decoded = JSON.parse(Buffer.from(xPayment, 'base64').toString('utf-8'));
+            payerAddress = decoded.payload?.authorization?.from;
+        } catch {
+            return res.status(400).json({ error: 'Could not decode payment header' });
+        }
+
+        if (!payerAddress || !/^0x[0-9a-fA-F]{40}$/i.test(payerAddress)) {
+            return res.status(400).json({ error: 'Could not extract valid payer address' });
+        }
+
+        const existingKey = await getKeyByAddress(payerAddress);
+        if (existingKey) {
+            return res.json({
+                message: 'Unlimited access already active for this address',
+                apiKey: existingKey,
+                address: payerAddress.toLowerCase(),
+                plan: 'unlimited',
+            });
+        }
+
+        const apiKey = 'pk_' + crypto.randomBytes(24).toString('hex');
+        await storeKey(apiKey, payerAddress);
+
+        res.json({
+            message: 'Unlimited access activated! Save your API key.',
+            apiKey,
+            address: payerAddress.toLowerCase(),
+            plan: 'unlimited',
+            price: '$100.00 USDC',
+            note: 'Include this key as X-API-KEY header on all future requests to skip x402 payments.',
+            timestamp: new Date().toISOString(),
+        });
+    } catch (err) {
+        console.error('Unlimited activation error:', err.message);
+        res.status(500).json({ error: 'Failed to activate unlimited access', details: err.message });
+    }
+});
+
+// ─── Free Endpoint: Verify Unlimited Key ────────────
+router.get('/unlimited/verify', async (req, res) => {
+    const key = req.query.key;
+    if (!key) {
+        return res.json({ valid: false, error: 'Provide ?key=pk_...' });
+    }
+    const data = await getKeyData(key);
+    if (!data) {
+        return res.json({ valid: false });
+    }
+    const parsed = typeof data === 'string' ? JSON.parse(data) : data;
+    res.json({ valid: true, address: parsed.address, since: parsed.createdAt, plan: 'unlimited' });
+});
 
 // ─── Free Endpoint: Skill Catalog ────────────────────
 router.get('/catalog', (req, res) => {
@@ -216,6 +339,24 @@ router.get('/catalog', (req, res) => {
             network: network,
             description: 'Sign and broadcast a transaction on Base. Provide unsigned tx and private key.',
             example: 'POST /skill/broadcast { "tx": { "to": "0x...", "data": "0x...", "value": "0x0" }, "privateKey": "0x..." }',
+        },
+        {
+            endpoint: '/skill/unlimited',
+            method: 'POST',
+            price: '$100.00',
+            currency: 'USDC',
+            network: network,
+            description: 'One-time $100 payment for unlimited access to all skills. Returns an API key.',
+            example: 'POST /skill/unlimited (pay via x402, receive API key)',
+        },
+        {
+            endpoint: '/skill/unlimited/verify',
+            method: 'GET',
+            price: 'free',
+            currency: 'none',
+            network: network,
+            description: 'Verify an unlimited API key. Returns validity and associated address.',
+            example: '/skill/unlimited/verify?key=pk_...',
         },
     ];
     res.json({ skills, payTo, network });
@@ -450,7 +591,6 @@ router.get('/price/:token', async (req, res) => {
 // ─── Paid Endpoint: Wallet Generation ───────────────
 router.get('/wallet/generate', async (req, res) => {
     try {
-        const crypto = require('crypto');
         const { keccak_256 } = require('@noble/hashes/sha3');
 
         // Generate a cryptographically secure private key

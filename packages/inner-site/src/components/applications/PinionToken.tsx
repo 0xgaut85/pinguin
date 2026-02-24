@@ -3,8 +3,8 @@ import Window from '../os/Window';
 
 export interface PinionTokenProps extends WindowAppProps {}
 
-const PUMPFUN_URL =
-    'https://pump.fun/coin/8Ch9VoynLqMRqCnydaLmTb11hMqzD1rV2huWYTUmpump';
+const DEXSCREENER_URL =
+    'https://dexscreener.com/solana/8h7wetdnk7nra2hzx6bnztet9q5uujp7y4qs938drjal';
 
 const PinionToken: React.FC<PinionTokenProps> = (props) => {
     const [iframeError, setIframeError] = useState(false);
@@ -17,7 +17,7 @@ const PinionToken: React.FC<PinionTokenProps> = (props) => {
             left={120}
             width={width}
             height={height}
-            windowTitle="$Pinion — pump.fun"
+            windowTitle="$Pinion — DEX Screener"
             windowBarIcon="pinionTokenIcon"
             windowBarColor="#0d0d0d"
             closeWindow={props.onClose}
@@ -25,16 +25,16 @@ const PinionToken: React.FC<PinionTokenProps> = (props) => {
             minimizeWindow={props.onMinimize}
             onWidthChange={setWidth}
             onHeightChange={setHeight}
-            bottomLeftText="pump.fun"
+            bottomLeftText="dexscreener.com"
         >
             <div style={styles.container}>
                 {iframeError ? (
                     <div style={styles.fallback}>
                         <p style={styles.fallbackTitle}>
-                            pump.fun blocked iframe embedding
+                            DEX Screener blocked iframe embedding
                         </p>
                         <a
-                            href={PUMPFUN_URL}
+                            href={DEXSCREENER_URL}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={styles.fallbackLink}
@@ -44,8 +44,8 @@ const PinionToken: React.FC<PinionTokenProps> = (props) => {
                     </div>
                 ) : (
                     <iframe
-                        src={PUMPFUN_URL}
-                        title="$Pinion on pump.fun"
+                        src={DEXSCREENER_URL}
+                        title="$Pinion on DEX Screener"
                         width="100%"
                         height="100%"
                         style={styles.iframe}

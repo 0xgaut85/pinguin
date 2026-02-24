@@ -3,8 +3,8 @@ import Window from '../os/Window';
 
 export interface PinionTokenProps extends WindowAppProps {}
 
-const CLANKER_URL =
-    'https://clanker.world/clanker/0x4609f25450b1732D7Ec63ebF3E39f8fAbb7A5B07';
+const PUMPFUN_URL =
+    'https://pump.fun/coin/8Ch9VoynLqMRqCnydaLmTb11hMqzD1rV2huWYTUmpump';
 
 const PinionToken: React.FC<PinionTokenProps> = (props) => {
     const [iframeError, setIframeError] = useState(false);
@@ -17,7 +17,7 @@ const PinionToken: React.FC<PinionTokenProps> = (props) => {
             left={120}
             width={width}
             height={height}
-            windowTitle="$Pinion — Clanker"
+            windowTitle="$Pinion — pump.fun"
             windowBarIcon="pinionTokenIcon"
             windowBarColor="#0d0d0d"
             closeWindow={props.onClose}
@@ -25,16 +25,16 @@ const PinionToken: React.FC<PinionTokenProps> = (props) => {
             minimizeWindow={props.onMinimize}
             onWidthChange={setWidth}
             onHeightChange={setHeight}
-            bottomLeftText="clanker.world"
+            bottomLeftText="pump.fun"
         >
             <div style={styles.container}>
                 {iframeError ? (
                     <div style={styles.fallback}>
                         <p style={styles.fallbackTitle}>
-                            Clanker blocked iframe embedding
+                            pump.fun blocked iframe embedding
                         </p>
                         <a
-                            href={CLANKER_URL}
+                            href={PUMPFUN_URL}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={styles.fallbackLink}
@@ -44,8 +44,8 @@ const PinionToken: React.FC<PinionTokenProps> = (props) => {
                     </div>
                 ) : (
                     <iframe
-                        src={CLANKER_URL}
-                        title="$Pinion on Clanker"
+                        src={PUMPFUN_URL}
+                        title="$Pinion on pump.fun"
                         width="100%"
                         height="100%"
                         style={styles.iframe}
